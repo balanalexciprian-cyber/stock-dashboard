@@ -1,14 +1,9 @@
 import streamlit as st
 import yfinance as yf
-from datetime import datetime
+from datetime import date
 
 st.set_page_config(page_title="Stock Live Dashboard", layout="wide", page_icon="📈")
 st.title("📊 Prețuri LIVE - Dashboard Personal")
-
-st.caption(f"Ultima actualizare: {datetime.now().strftime('%H:%M:%S')}")
-
-if st.button("🔄 Refresh Manual"):
-    st.rerun()
 
 # ====================== GRUPE ======================
 groups = {
@@ -17,28 +12,76 @@ groups = {
     "📈 Alex PIE 20": ["AAPL", "NVDA", "MSFT", "AMZN", "META", "GOOG", "TSLA", "ORCL", "AVGO"]
 }
 
-for group_name, tickers in groups.items():
-    st.subheader(group_name)
+# Date și sume fixe
+pie_ot_date = date(2024, 7, 22)
+alex_pie_date = date(2025, 1, 1)
+
+total_pie20 = 1100.00
+alimentare1 = 371.21
+alimentare2 = 74.70
+total_pie_ot = alimentare1 + alimentare2
+
+st.sidebar.header("⚙️ Setări")
+if st.button("🔄 Refresh Manual"):
+    st.rerun()
+
+def get_data(tick, group_name):
+    try:
+        info = yf.Ticker(tick).info
+        hist = yf.Ticker(tick).history(period="2y")
+        current = info.get('currentPrice') or info.get('regularMarketPrice') or hist['Close'].iloc[-1]
+        
+        if group_name == "🤖 AI TECH":
+            ref = info.get('regularMarketPreviousClose') or hist['Close'].iloc[-2]
+        elif group_name == "💰 PIE OT Investimental":
+            ref = hist[hist.index.date <= pie_ot_date].iloc[-1]['Close']
+        else:
+            ref = hist[hist.index.date <= alex_pie_date].iloc[-1]['Close']
+        
+        change_pct = (current - ref) / ref * 100 if ref else 0
+        return {'price': current, 'change_pct': change_pct, 'ref_price': ref}
+    except:
+        return None
+
+# ====================== AFISARE ======================
+for group_name, ticks in groups.items():
+    st.markdown(f"### {group_name}")
     cols = st.columns(4)
+    total_current = 0.0
     
-    for i, tick in enumerate(tickers):
-        try:
-            info = yf.Ticker(tick).info
-            price = info.get('currentPrice') or info.get('regularMarketPrice')
-            change_pct = info.get('regularMarketChangePercent', 0)
-            
-            emoji = "🟢" if change_pct >= 0 else "🔴"
-            
+    for i, tick in enumerate(ticks):
+        data = get_data(tick, group_name)
+        if data:
+            emoji = "🟢" if data['change_pct'] >= 0 else "🔴"
             with cols[i % 4]:
                 st.metric(
                     label=f"**{tick}**",
-                    value=f"${price:.2f}" if price else "N/A",
-                    delta=f"{emoji} {change_pct:.2f}%"
+                    value=f"${data['price']:.2f}",
+                    delta=f"{emoji} {data['change_pct']:.2f}%"
                 )
-        except:
-            with cols[i % 4]:
-                st.metric(label=f"**{tick}**", value="Eroare", delta="")
+                
+                if group_name != "🤖 AI TECH":
+                    total_invested = total_pie20 if "PIE 20" in group_name else total_pie_ot
+                    amt_per = total_invested / len(ticks)
+                    current_val = amt_per * (data['price'] / data['ref_price']) if data['ref_price'] else amt_per
+                    total_current += current_val
+                    st.caption(f"${amt_per:.2f} → ${current_val:.2f}")
+    
+    # Totaluri
+    if "PIE 20" in group_name:
+        change = (total_current - total_pie20) / total_pie20 * 100
+        st.success(f"**TOTAL ALEX PIE 20**: {'🟢' if change >= 0 else '🔴'} **{change:.2f}%** | ${total_pie20:,.0f} → ${total_current:,.0f}")
+        st.info(f"Suma totală investită: **${total_pie20:.2f}** (19.05.2026)")
+        
+    elif "PIE OT" in group_name:
+        change = (total_current - total_pie_ot) / total_pie_ot * 100
+        st.success(f"**TOTAL PIE OT Investimental**: {'🟢' if change >= 0 else '🔴'} **{change:.2f}%** | ${total_pie_ot:,.2f} → ${total_current:,.2f}")
+        st.info(f"Alimentări: ${alimentare1:.2f} (22.07.2024) + ${alimentare2:.2f} (28.04.2026)")
+    
+    else:
+        avg = sum([get_data(t, group_name)['change_pct'] for t in ticks if get_data(t, group_name)]) / len(ticks)
+        st.success(f"**Total {group_name}**: {'🟢' if avg >= 0 else '🔴'} **{avg:.2f}%**")
     
     st.markdown("---")
 
-st.caption("Date furnizate de Yahoo Finance")
+st.caption("Date de la Yahoo Finance • Actualizare live")
