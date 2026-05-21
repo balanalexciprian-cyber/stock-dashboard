@@ -5,22 +5,20 @@ from datetime import date
 st.set_page_config(page_title="Stock Live Dashboard", layout="wide", page_icon="📈")
 st.title("📊 Prețuri LIVE - Dashboard Personal")
 
-# ====================== GRUPE ======================
+# ====================== TOATE ACȚIUNILE ======================
 groups = {
-    "🤖 AI TECH": ["NTNX", "MSTR", "TSM", "INTC", "MU", "SNDK", "ON", 
-                   "ASML", "AVGO", "AMAT", "SNPS", "CDNS"],
+    "🤖 AI TECH": ["NTNX", "MSTR", "TSM", "INTC", "MU", "SNDK", "ON", "ASML", "AVGO", "AMAT", "SNPS", "CDNS"],
     
-    "💰 PIE OT Investimental": ["AMZN", "JPM", "PLD", "WMT", "LLY", 
-                               "NEE", "META", "XOM", "MSFT"],
+    "💰 PIE OT Investimental": ["AMZN", "JPM", "PLD", "WMT", "LLY", "NEE", "META", "XOM", "MSFT"],
     
     "📈 Alex PIE 20 (19 Mai 2026)": ["NVDA", "AAPL", "AMZN", "META", "COST", "WMT", 
                                     "BRK.B", "JPM", "V", "MA", "LLY", "JNJ", "CAT", 
                                     "GOOG", "AVGO", "XOM", "MSFT", "TSLA", "ORCL", "HD"]
 }
 
-# Date de referință EXACTE cum ai cerut
-pie_ot_date = date(2024, 7, 22)      # 22.07.2024
-alex_pie_date = date(2026, 5, 19)    # 19.05.2026
+# Date de referință
+pie_ot_date = date(2024, 7, 22)
+alex_pie_date = date(2026, 5, 19)
 
 total_pie20 = 1100.00
 alimentare1 = 371.21
@@ -31,11 +29,12 @@ st.sidebar.header("⚙️ Setări")
 if st.button("🔄 Refresh Manual"):
     st.rerun()
 
+@st.cache_data(ttl=300)   # cache 5 minute
 def get_data(tick, group_name):
     try:
         stock = yf.Ticker(tick)
         info = stock.info
-        hist = stock.history(period="3y")
+        hist = stock.history(period="2y")   # redus de la 3y
         
         current_price = info.get('currentPrice') or info.get('regularMarketPrice') or hist['Close'].iloc[-1]
         
@@ -44,17 +43,13 @@ def get_data(tick, group_name):
         elif group_name == "💰 PIE OT Investimental":
             ref_row = hist[hist.index.date <= pie_ot_date].iloc[-1]
             ref_price = ref_row['Close']
-        else:  # Alex PIE 20
+        else:
             ref_row = hist[hist.index.date <= alex_pie_date].iloc[-1]
             ref_price = ref_row['Close']
         
         change_pct = (current_price - ref_price) / ref_price * 100 if ref_price else 0
         
-        return {
-            'price': current_price,
-            'change_pct': change_pct,
-            'ref_price': ref_price
-        }
+        return {'price': current_price, 'change_pct': change_pct, 'ref_price': ref_price}
     except:
         return None
 
@@ -74,7 +69,6 @@ for group_name, ticks in groups.items():
                     value=f"${data['price']:.2f}",
                     delta=f"{emoji} {data['change_pct']:.2f}%"
                 )
-                
                 if group_name != "🤖 AI TECH":
                     total_invested = total_pie20 if "PIE 20" in group_name else total_pie_ot
                     amt_per = total_invested / len(ticks)
@@ -86,11 +80,11 @@ for group_name, ticks in groups.items():
     if "PIE 20" in group_name:
         change = (total_current - total_pie20) / total_pie20 * 100
         st.success(f"**TOTAL ALEX PIE 20**: {'🟢' if change >= 0 else '🔴'} **{change:.2f}%** | ${total_pie20:,.0f} → ${total_current:,.0f}")
-        st.info(f"Referință: 19.05.2026 | Suma totală: **${total_pie20:.2f}**")
+        st.info(f"Referință: **19.05.2026**")
         
     elif "PIE OT" in group_name:
         change = (total_current - total_pie_ot) / total_pie_ot * 100
-        st.success(f"**TOTAL PIE OT Investimental**: {'🟢' if change >= 0 else '🔴'} **{change:.2f}%** | ${total_pie_ot:,.2f} → ${total_current:,.2f}")
+        st.success(f"**TOTAL PIE OT**: {'🟢' if change >= 0 else '🔴'} **{change:.2f}%** | ${total_pie_ot:,.2f} → ${total_current:,.2f}")
         st.info(f"Alimentări: ${alimentare1:.2f} (22.07.2024) + ${alimentare2:.2f} (28.04.2026)")
     
     else:
