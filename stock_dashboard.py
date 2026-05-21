@@ -7,13 +7,15 @@ st.title("📊 Prețuri LIVE - Dashboard Personal")
 
 # ====================== GRUPE ======================
 groups = {
-    "🤖 AI TECH": ["NVDA", "TSM", "AVGO", "ASML", "AMAT", "MU", "INTC"],
+    "🤖 AI TECH": ["NTNX", "MSTR", "TSM", "INTC", "MU", "SNDK", "ON", 
+                   "ASML", "AVGO", "AMAT", "SNPS", "CDNS"],
     
-    "💰 PIE OT Investimental": ["AMZN", "MSFT", "META", "GOOG", "JPM"],
+    "💰 PIE OT Investimental": ["AMZN", "JPM", "PLD", "WMT", "LLY", 
+                               "NEE", "META", "XOM", "MSFT"],
     
-    "📈 Alex PIE 20 (19 Mai 2026)": ["AAPL", "NVDA", "MSFT", "AMZN", "META", "GOOG", 
-                                    "TSLA", "ORCL", "AVGO", "COST", "WMT", "JPM", "V", 
-                                    "MA", "LLY", "JNJ", "CAT", "BRK.B"]
+    "📈 Alex PIE 20 (19 Mai 2026)": ["NVDA", "AAPL", "AMZN", "META", "COST", "WMT", 
+                                    "BRK.B", "JPM", "V", "MA", "LLY", "JNJ", "CAT", 
+                                    "GOOG", "AVGO", "XOM", "MSFT", "TSLA", "ORCL", "HD"]
 }
 
 # Date de referință EXACTE cum ai cerut
