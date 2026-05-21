@@ -18,9 +18,9 @@ groups = {
                        "GOOG", "AVGO", "XOM", "MSFT", "TSLA", "ORCL", "HD"]
 }
 
-# Date de referință REALISTE (în trecut)
-pie_ot_date = date(2024, 7, 22)
-alex_pie_date = date(2025, 1, 1)   # 1 ianuarie 2025
+# Date de referință REALISTE
+pie_ot_date = date(2024, 7, 22)      # 22 iulie 2024
+alex_pie_date = date(2025, 1, 1)     # 1 ianuarie 2025
 
 total_pie20 = 1100.00
 alimentare1 = 371.21
@@ -40,7 +40,7 @@ def get_data(tick, group_name):
         current_price = info.get('currentPrice') or info.get('regularMarketPrice') or hist['Close'].iloc[-1]
         
         if group_name == "🤖 AI TECH":
-            ref_price = info.get('regularMarketPreviousClose') or hist['Close'].iloc[-2] if len(hist) > 1 else current_price
+            ref_price = info.get('regularMarketPreviousClose') or (hist['Close'].iloc[-2] if len(hist) > 1 else current_price)
         elif group_name == "💰 PIE OT Investimental":
             ref_row = hist[hist.index.date <= pie_ot_date].iloc[-1]
             ref_price = ref_row['Close']
@@ -90,7 +90,7 @@ for group_name, ticks in groups.items():
         change = (total_current - total_pie_ot) / total_pie_ot * 100
         st.success(f"**TOTAL PIE OT**: {'🟢' if change >= 0 else '🔴'} **{change:.2f}%** | ${total_pie_ot:,.2f} → ${total_current:,.2f}")
     else:
-        avg = sum(d['change_pct'] for d in [get_data(t, group_name) for t in ticks if get_data(t, group_name)]) / len(ticks)
+        avg = sum([get_data(t, group_name)['change_pct'] for t in ticks if get_data(t, group_name)]) / len(ticks)
         st.success(f"**Total {group_name}**: {'🟢' if avg >= 0 else '🔴'} **{avg:.2f}%**")
     
     st.markdown("---")
