@@ -5,18 +5,20 @@ from datetime import date
 st.set_page_config(page_title="Stock Live Dashboard", layout="wide", page_icon="📈")
 st.title("📊 Prețuri LIVE - Dashboard Personal")
 
-# ====================== GRUPE ======================
+# ====================== TOATE GRUPELE CU ACȚIUNILE ORIGINALE ======================
 groups = {
-    "🤖 AI TECH": ["NVDA", "TSM", "AVGO", "ASML", "AMAT", "MU", "INTC"],
+    "🤖 AI TECH": ["NTNX", "MSTR", "TSM", "INTC", "MU", "SNDK", "ON", 
+                   "ASML", "AVGO", "AMAT", "SNPS", "CDNS"],
     
-    "💰 PIE OT Investimental": ["AMZN", "MSFT", "META", "GOOG", "JPM"],
+    "💰 PIE OT Investimental": ["AMZN", "JPM", "PLD", "WMT", "LLY", 
+                               "NEE", "META", "XOM", "MSFT"],
     
-    "📈 Alex PIE 20 (19 Mai 2026)": ["AAPL", "NVDA", "MSFT", "AMZN", "META", "GOOG", 
-                                    "TSLA", "ORCL", "AVGO", "COST", "WMT", "JPM", "V", 
-                                    "MA", "LLY", "JNJ", "CAT", "BRK.B"]
+    "📈 Alex PIE 20 (19 Mai 2026)": ["NVDA", "AAPL", "AMZN", "META", "COST", "WMT", 
+                                    "BRK.B", "JPM", "V", "MA", "LLY", "JNJ", "CAT", 
+                                    "GOOG", "AVGO", "XOM", "MSFT", "TSLA", "ORCL", "HD"]
 }
 
-# Date de referință EXACTE cum ai cerut
+# Date de referință exacte
 pie_ot_date = date(2024, 7, 22)      # 22.07.2024
 alex_pie_date = date(2026, 5, 19)    # 19.05.2026
 
@@ -79,12 +81,15 @@ for group_name, ticks in groups.items():
                     current_val = amt_per * (data['price'] / data['ref_price']) if data['ref_price'] else amt_per
                     total_current += current_val
                     st.caption(f"${amt_per:.2f} → ${current_val:.2f}")
+        else:
+            with cols[i % 4]:
+                st.metric(label=f"**{tick}**", value="Eroare", delta="")
     
     # Totaluri
     if "PIE 20" in group_name:
         change = (total_current - total_pie20) / total_pie20 * 100
         st.success(f"**TOTAL ALEX PIE 20**: {'🟢' if change >= 0 else '🔴'} **{change:.2f}%** | ${total_pie20:,.0f} → ${total_current:,.0f}")
-        st.info(f"Referință: 19.05.2026 | Suma totală: **${total_pie20:.2f}**")
+        st.info(f"Referință: **19.05.2026** | Suma totală: **${total_pie20:.2f}**")
         
     elif "PIE OT" in group_name:
         change = (total_current - total_pie_ot) / total_pie_ot * 100
