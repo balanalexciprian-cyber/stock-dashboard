@@ -1,7 +1,7 @@
 import streamlit as st
+import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
-from twelvedata import TDClient
 
 st.set_page_config(
     page_title="Investimental Dashboard",
@@ -19,9 +19,16 @@ html, body, [class*="css"] {
     background: linear-gradient(180deg, #f5f5f7 0%, #ffffff 100%);
 }
 
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    max-width: 1400px;
+}
+
 .main-title {
     font-size: 42px;
     font-weight: 800;
+    letter-spacing: -1.2px;
     color: #111111;
     margin-bottom: 0px;
 }
@@ -49,6 +56,18 @@ html, body, [class*="css"] {
     box-shadow: 0 10px 30px rgba(0,0,0,0.05);
 }
 
+[data-testid="stMetricLabel"] {
+    color: #6e6e73;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+[data-testid="stMetricValue"] {
+    color: #111111;
+    font-size: 28px;
+    font-weight: 800;
+}
+
 [data-testid="stTabs"] button {
     color: #111111 !important;
     font-weight: 700 !important;
@@ -58,9 +77,38 @@ html, body, [class*="css"] {
     color: #111111 !important;
 }
 
+[data-testid="stTabs"] button[aria-selected="true"] {
+    background: rgba(255, 255, 255, 0.85) !important;
+    border-radius: 14px !important;
+}
+
+.stDataFrame {
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+}
+
 @media screen and (max-width: 768px) {
+    .block-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        padding-top: 1.2rem;
+    }
+
     .main-title {
         font-size: 31px;
+        line-height: 1.05;
+    }
+
+    .subtitle {
+        font-size: 14px;
+        margin-bottom: 18px;
+    }
+
+    [data-testid="stMetric"] {
+        padding: 14px;
+        border-radius: 18px;
     }
 
     [data-testid="stMetricValue"] {
@@ -100,21 +148,14 @@ html, body, [class*="css"] {
     [data-testid="stTabs"] button p {
         color: #f5f5f7 !important;
     }
+
+    [data-testid="stTabs"] button[aria-selected="true"] {
+        background: rgba(255, 255, 255, 0.14) !important;
+        border-radius: 14px !important;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
-
-
-try:
-    API_KEY = st.secrets["TWELVE_DATA_API_KEY"]
-except Exception:
-    API_KEY = ""
-
-if not API_KEY:
-    st.error("Lipsește TWELVE_DATA_API_KEY. Pune cheia în Streamlit Cloud → Settings → Secrets.")
-    st.stop()
-
-td = TDClient(apikey=API_KEY)
 
 
 pies = {
@@ -168,7 +209,7 @@ pies = {
     "Alex Pie20": {
         "symbols": [
             "NVDA", "AAPL", "AMZN", "META", "COST",
-            "WMT", "BRK.B", "JPM", "V", "MA",
+            "WMT", "BRK-B", "JPM", "V", "MA",
             "LLY", "JNJ", "CAT", "GOOGL", "AVGO",
             "XOM", "MSFT", "TSLA", "ORCL", "HD"
         ],
@@ -198,22 +239,24 @@ def get_historical_price(symbol, date):
     end = start + timedelta(days=10)
 
     try:
-        ts = td.time_series(
-            symbol=symbol,
-            interval="1day",
-            start_date=start.strftime("%Y-%m-%d"),
-            end_date=end.strftime("%Y-%m-%d"),
-            outputsize=30
+        data = yf.download(
+            symbol,
+            start=start.strftime("%Y-%m-%d"),
+            end=end.strftime("%Y-%m-%d"),
+            progress=False,
+            auto_adjust=True,
+            threads=False
         )
 
-        df = ts.as_pandas()
-
-        if df is None or df.empty:
+        if data is None or data.empty:
             return None
 
-        df = df.sort_index()
+        close_value = data["Close"].dropna().iloc[0]
 
-        return float(df["close"].iloc[0])
+        if hasattr(close_value, "item"):
+            return float(close_value.item())
+
+        return float(close_value)
 
     except Exception:
         return None
@@ -222,20 +265,23 @@ def get_historical_price(symbol, date):
 @st.cache_data(ttl=900)
 def get_current_price(symbol):
     try:
-        ts = td.time_series(
-            symbol=symbol,
-            interval="1day",
-            outputsize=5
+        data = yf.download(
+            symbol,
+            period="5d",
+            progress=False,
+            auto_adjust=True,
+            threads=False
         )
 
-        df = ts.as_pandas()
-
-        if df is None or df.empty:
+        if data is None or data.empty:
             return None
 
-        df = df.sort_index()
+        close_value = data["Close"].dropna().iloc[-1]
 
-        return float(df["close"].iloc[-1])
+        if hasattr(close_value, "item"):
+            return float(close_value.item())
+
+        return float(close_value)
 
     except Exception:
         return None
@@ -250,6 +296,11 @@ def format_percent(value):
 
 
 def color_number(value):
+    try:
+        value = float(value)
+    except Exception:
+        return "color: #8e8e93; font-weight: 700"
+
     if value > 0:
         return "color: #00a651; font-weight: 800"
     elif value < 0:
@@ -257,14 +308,23 @@ def color_number(value):
     return "color: #8e8e93; font-weight: 700"
 
 
-st.markdown('<div class="main-title">Investimental Dashboard</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="subtitle">Dashboard cu Twelve Data, pai-uri, profit/pierdere, dividende și taxe.</div>',
+    '<div class="main-title">Investimental Dashboard</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<div class="subtitle">Dashboard cu yfinance, pai-uri, profit/pierdere, dividende și taxe.</div>',
     unsafe_allow_html=True
 )
 
 
-tabs = st.tabs(["📌 Overview", "Alex PIE OT", "Alex Pie20", "AI TECH"])
+tabs = st.tabs([
+    "📌 Overview",
+    "Alex PIE OT",
+    "Alex Pie20",
+    "AI TECH"
+])
 
 portfolio_rows = []
 pie_results = {}
@@ -272,9 +332,12 @@ pie_results = {}
 grand_total_invested = 0
 grand_total_value = 0
 
+
 for pie_name, pie in pies.items():
-    total_invested = 0
+
+    total_invested = sum(item["amount"] for item in pie["investments"])
     total_stock_value = 0
+
     rows = []
     investment_summaries = []
 
@@ -283,29 +346,37 @@ for pie_name, pie in pies.items():
     dividends_total = sum(item["amount"] for item in cash_flows if item["amount"] > 0)
     fees_total = sum(item["amount"] for item in cash_flows if item["amount"] < 0)
 
+    missing_prices = 0
+
     for investment in pie["investments"]:
+
         date = investment["date"]
         amount = investment["amount"]
         symbols = pie["symbols"]
         amount_per_stock = amount / len(symbols)
 
         investment_current_value = 0
+        investment_missing = 0
 
         for symbol in symbols:
+
             buy_price = get_historical_price(symbol, date)
             current_price = get_current_price(symbol)
 
             if buy_price is None or current_price is None:
+                missing_prices += 1
+                investment_missing += 1
+
                 rows.append({
                     "Data": date,
                     "Symbol": symbol,
                     "Investit": round(amount_per_stock, 2),
-                    "Buy": 0,
-                    "Now": 0,
-                    "Valoare": 0,
-                    "P/L": 0,
-                    "%": 0,
-                    "Status": "Eroare"
+                    "Buy": "N/A",
+                    "Now": "N/A",
+                    "Valoare": "N/A",
+                    "P/L": "N/A",
+                    "%": "N/A",
+                    "Status": "Lipsă preț"
                 })
                 continue
 
@@ -314,7 +385,6 @@ for pie_name, pie in pies.items():
             profit_loss = current_value - amount_per_stock
             percent = (profit_loss / amount_per_stock) * 100
 
-            total_invested += amount_per_stock
             total_stock_value += current_value
             investment_current_value += current_value
 
@@ -338,7 +408,8 @@ for pie_name, pie in pies.items():
             "amount": amount,
             "current_value": investment_current_value,
             "profit": investment_profit,
-            "percent": investment_percent
+            "percent": investment_percent,
+            "missing": investment_missing
         })
 
     total_value = total_stock_value + cash_total
@@ -355,7 +426,8 @@ for pie_name, pie in pies.items():
         "Dividende/Taxe": round(cash_total, 2),
         "Valoare totală": round(total_value, 2),
         "Profit/Pierdere": round(total_profit, 2),
-        "Procent %": round(total_percent, 2)
+        "Procent %": round(total_percent, 2),
+        "Prețuri lipsă": missing_prices
     })
 
     pie_results[pie_name] = {
@@ -369,11 +441,13 @@ for pie_name, pie in pies.items():
         "total_percent": total_percent,
         "rows": rows,
         "investment_summaries": investment_summaries,
-        "cash_flows": cash_flows
+        "cash_flows": cash_flows,
+        "missing_prices": missing_prices
     }
 
 
 with tabs[0]:
+
     grand_profit = grand_total_value - grand_total_invested
     grand_percent = (grand_profit / grand_total_invested) * 100 if grand_total_invested else 0
 
@@ -383,24 +457,50 @@ with tabs[0]:
 
     col1.metric("Total investit", format_money(grand_total_invested))
     col2.metric("Valoare totală", format_money(grand_total_value))
-    col3.metric("Profit/Pierdere", format_money(grand_profit), delta=format_money(grand_profit))
-    col4.metric("Procent total", format_percent(grand_percent), delta=format_percent(grand_percent))
+    col3.metric(
+        "Profit/Pierdere",
+        format_money(grand_profit),
+        delta=format_money(grand_profit)
+    )
+    col4.metric(
+        "Procent total",
+        format_percent(grand_percent),
+        delta=format_percent(grand_percent)
+    )
 
     st.markdown('</div>', unsafe_allow_html=True)
 
     overview_df = pd.DataFrame(portfolio_rows)
 
-    styled = overview_df.style.map(color_number, subset=["Profit/Pierdere"]).map(color_number, subset=["Procent %"])
+    styled = overview_df.style.map(
+        color_number,
+        subset=["Profit/Pierdere"]
+    ).map(
+        color_number,
+        subset=["Procent %"]
+    )
 
-    st.dataframe(styled, use_container_width=True, hide_index=True)
+    st.dataframe(
+        styled,
+        use_container_width=True,
+        hide_index=True
+    )
 
     chart_df = overview_df[["Pai", "Profit/Pierdere"]].set_index("Pai")
     st.bar_chart(chart_df, use_container_width=True)
 
 
 for index, pie_name in enumerate(["Alex PIE OT", "Alex Pie20", "AI TECH"], start=1):
+
     with tabs[index]:
+
         result = pie_results[pie_name]
+
+        if result["missing_prices"] > 0:
+            st.warning(
+                f"Atenție: {result['missing_prices']} prețuri nu au fost încărcate. "
+                "Nu sunt calculate ca -100%, ci apar ca N/A."
+            )
 
         st.markdown('<div class="apple-card">', unsafe_allow_html=True)
 
@@ -410,35 +510,78 @@ for index, pie_name in enumerate(["Alex PIE OT", "Alex Pie20", "AI TECH"], start
 
         col1.metric("Total investit", format_money(result["total_invested"]))
         col2.metric("Valoare totală", format_money(result["total_value"]))
-        col3.metric("Profit/Pierdere", format_money(result["total_profit"]), delta=format_money(result["total_profit"]))
-        col4.metric("Procent total", format_percent(result["total_percent"]), delta=format_percent(result["total_percent"]))
+        col3.metric(
+            "Profit/Pierdere",
+            format_money(result["total_profit"]),
+            delta=format_money(result["total_profit"])
+        )
+        col4.metric(
+            "Procent total",
+            format_percent(result["total_percent"]),
+            delta=format_percent(result["total_percent"])
+        )
 
         st.markdown('</div>', unsafe_allow_html=True)
 
         c1, c2, c3 = st.columns(3)
+
         c1.metric("Valoare acțiuni", format_money(result["total_stock_value"]))
         c2.metric("Dividende", format_money(result["dividends_total"]))
         c3.metric("Taxe", format_money(result["fees_total"]))
 
         for summary in result["investment_summaries"]:
+
             st.subheader(f"Investiție {summary['date']}")
 
             c1, c2, c3, c4 = st.columns(4)
 
             c1.metric("Investit", format_money(summary["amount"]))
             c2.metric("Valoare actuală", format_money(summary["current_value"]))
-            c3.metric("Profit/Pierdere", format_money(summary["profit"]), delta=format_money(summary["profit"]))
-            c4.metric("Procent", format_percent(summary["percent"]), delta=format_percent(summary["percent"]))
+            c3.metric(
+                "Profit/Pierdere",
+                format_money(summary["profit"]),
+                delta=format_money(summary["profit"])
+            )
+            c4.metric(
+                "Procent",
+                format_percent(summary["percent"]),
+                delta=format_percent(summary["percent"])
+            )
+
+            if summary["missing"] > 0:
+                st.caption(f"{summary['missing']} simboluri au preț lipsă pentru această investiție.")
 
         df = pd.DataFrame(result["rows"])
-        styled_df = df.style.map(color_number, subset=["P/L"]).map(color_number, subset=["%"])
 
-        st.dataframe(styled_df, use_container_width=True, hide_index=True)
+        styled_df = df.style.map(
+            color_number,
+            subset=["P/L"]
+        ).map(
+            color_number,
+            subset=["%"]
+        )
+
+        st.dataframe(
+            styled_df,
+            use_container_width=True,
+            hide_index=True
+        )
 
         if result["cash_flows"]:
             st.subheader("Dividende și taxe")
-            cash_df = pd.DataFrame(result["cash_flows"])
-            st.dataframe(cash_df, use_container_width=True, hide_index=True)
 
-        chart_df = df[["Symbol", "P/L"]].groupby("Symbol").sum()
-        st.bar_chart(chart_df, use_container_width=True)
+            cash_df = pd.DataFrame(result["cash_flows"])
+            cash_df["amount"] = cash_df["amount"].round(2)
+
+            st.dataframe(
+                cash_df,
+                use_container_width=True,
+                hide_index=True
+            )
+
+        numeric_df = df[df["P/L"] != "N/A"].copy()
+
+        if not numeric_df.empty:
+            numeric_df["P/L"] = numeric_df["P/L"].astype(float)
+            chart_df = numeric_df[["Symbol", "P/L"]].groupby("Symbol").sum()
+            st.bar_chart(chart_df, use_container_width=True)
