@@ -171,7 +171,7 @@ pies = {
             "XOM", "MSFT", "TSLA", "ORCL", "HD"
         ],
         "investments": [
-            {"date": "2026-04-28", "amount": 1100.00}
+            {"date": "2026-05-19", "amount": 1100.00}
         ]
     },
 
@@ -248,15 +248,27 @@ def format_percent(value):
     return f"{value:.2f}%"
 
 
-st.markdown('<div class="main-title">Investimental Dashboard</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Portofoliul tău organizat pe pai-uri, cu profit/pierdere live și prețuri actuale.</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="main-title">Investimental Dashboard</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<div class="subtitle">Portofoliul tău organizat pe pai-uri, cu profit/pierdere live și prețuri actuale.</div>',
+    unsafe_allow_html=True
+)
 
 grand_total_invested = 0
 grand_total_current_value = 0
 
 portfolio_rows = []
 
-tabs = st.tabs(["📌 Overview", "Alex Pai OT", "Alex Pai 20", "AiTech"])
+tabs = st.tabs([
+    "📌 Overview",
+    "Alex Pai OT",
+    "Alex Pai 20",
+    "AiTech"
+])
 
 pie_results = {}
 
@@ -286,7 +298,7 @@ for pie_name, pie in pies.items():
                 rows_for_this_investment.append({
                     "Data": date,
                     "Symbol": symbol,
-                    "Investit": amount_per_stock,
+                    "Investit": round(amount_per_stock, 2),
                     "Buy": 0,
                     "Now": 0,
                     "Valoare": 0,
@@ -353,6 +365,7 @@ for pie_name, pie in pies.items():
 
 
 with tabs[0]:
+
     grand_profit_loss = grand_total_current_value - grand_total_invested
     grand_percent = (grand_profit_loss / grand_total_invested) * 100 if grand_total_invested else 0
 
@@ -364,8 +377,16 @@ with tabs[0]:
 
     col1.metric("Total investit", format_money(grand_total_invested))
     col2.metric("Valoare actuală", format_money(grand_total_current_value))
-    col3.metric("Profit/Pierdere", format_money(grand_profit_loss), delta=format_money(grand_profit_loss))
-    col4.metric("Procent total", format_percent(grand_percent), delta=format_percent(grand_percent))
+    col3.metric(
+        "Profit/Pierdere",
+        format_money(grand_profit_loss),
+        delta=format_money(grand_profit_loss)
+    )
+    col4.metric(
+        "Procent total",
+        format_percent(grand_percent),
+        delta=format_percent(grand_percent)
+    )
 
     st.markdown('</div>', unsafe_allow_html=True)
 
