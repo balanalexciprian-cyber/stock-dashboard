@@ -248,18 +248,37 @@ def get_historical_price(symbol, date):
             threads=False
         )
 
-        if data is None or data.empty:
-            return None
+        if data is not None and not data.empty:
+            close_value = data["Close"].dropna().iloc[0]
 
-        close_value = data["Close"].dropna().iloc[0]
+            if hasattr(close_value, "item"):
+                return float(close_value.item())
 
-        if hasattr(close_value, "item"):
-            return float(close_value.item())
-
-        return float(close_value)
+            return float(close_value)
 
     except Exception:
-        return None
+        pass
+
+    try:
+        ticker = yf.Ticker(symbol)
+        data = ticker.history(
+            start=start.strftime("%Y-%m-%d"),
+            end=end.strftime("%Y-%m-%d"),
+            auto_adjust=True
+        )
+
+        if data is not None and not data.empty:
+            close_value = data["Close"].dropna().iloc[0]
+
+            if hasattr(close_value, "item"):
+                return float(close_value.item())
+
+            return float(close_value)
+
+    except Exception:
+        pass
+
+    return None
 
 
 @st.cache_data(ttl=900)
@@ -273,18 +292,36 @@ def get_current_price(symbol):
             threads=False
         )
 
-        if data is None or data.empty:
-            return None
+        if data is not None and not data.empty:
+            close_value = data["Close"].dropna().iloc[-1]
 
-        close_value = data["Close"].dropna().iloc[-1]
+            if hasattr(close_value, "item"):
+                return float(close_value.item())
 
-        if hasattr(close_value, "item"):
-            return float(close_value.item())
-
-        return float(close_value)
+            return float(close_value)
 
     except Exception:
-        return None
+        pass
+
+    try:
+        ticker = yf.Ticker(symbol)
+        data = ticker.history(
+            period="5d",
+            auto_adjust=True
+        )
+
+        if data is not None and not data.empty:
+            close_value = data["Close"].dropna().iloc[-1]
+
+            if hasattr(close_value, "item"):
+                return float(close_value.item())
+
+            return float(close_value)
+
+    except Exception:
+        pass
+
+    return None
 
 
 def format_money(value):
@@ -305,6 +342,7 @@ def color_number(value):
         return "color: #00a651; font-weight: 800"
     elif value < 0:
         return "color: #ff3b30; font-weight: 800"
+
     return "color: #8e8e93; font-weight: 700"
 
 
