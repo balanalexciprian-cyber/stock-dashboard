@@ -1,625 +1,233 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 
 st.set_page_config(
-    page_title="Investimental Dashboard",
-    page_icon="📈",
-    layout="wide"
+    page_title="Stock Live Dashboard",
+    layout="wide",
+    page_icon="📈"
 )
 
-st.markdown("""
-<style>
-html, body, [class*="css"] {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
-}
+st.title("📊 Dashboard Investiții - Alex Balan")
 
-.stApp {
-    background: linear-gradient(180deg, #f5f5f7 0%, #ffffff 100%);
-}
+# =========================
+# GRUPE / PORTOFOLII
+# =========================
 
-.block-container {
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    max-width: 1400px;
-}
-
-.main-title {
-    font-size: 42px;
-    font-weight: 800;
-    letter-spacing: -1.2px;
-    color: #111111;
-    margin-bottom: 0px;
-}
-
-.subtitle {
-    font-size: 16px;
-    color: #6e6e73;
-    margin-bottom: 28px;
-}
-
-.apple-card {
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 28px;
-    padding: 24px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.08);
-    margin-bottom: 22px;
-}
-
-[data-testid="stMetric"] {
-    background: #ffffff;
-    border: 1px solid rgba(0,0,0,0.06);
-    border-radius: 22px;
-    padding: 18px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-}
-
-[data-testid="stMetricLabel"] {
-    color: #6e6e73;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-[data-testid="stMetricValue"] {
-    color: #111111;
-    font-size: 28px;
-    font-weight: 800;
-}
-
-[data-testid="stTabs"] button {
-    color: #111111 !important;
-    font-weight: 700 !important;
-}
-
-[data-testid="stTabs"] button p {
-    color: #111111 !important;
-}
-
-[data-testid="stTabs"] button[aria-selected="true"] {
-    background: rgba(255, 255, 255, 0.85) !important;
-    border-radius: 14px !important;
-}
-
-.stDataFrame {
-    border-radius: 22px;
-    overflow: hidden;
-    border: 1px solid rgba(0,0,0,0.06);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-}
-
-@media screen and (max-width: 768px) {
-    .block-container {
-        padding-left: 1rem;
-        padding-right: 1rem;
-        padding-top: 1.2rem;
-    }
-
-    .main-title {
-        font-size: 31px;
-        line-height: 1.05;
-    }
-
-    .subtitle {
-        font-size: 14px;
-        margin-bottom: 18px;
-    }
-
-    [data-testid="stMetric"] {
-        padding: 14px;
-        border-radius: 18px;
-    }
-
-    [data-testid="stMetricValue"] {
-        font-size: 22px;
-    }
-}
-
-@media (prefers-color-scheme: dark) {
-    .stApp {
-        background: linear-gradient(180deg, #0f0f10 0%, #1c1c1e 100%);
-    }
-
-    .main-title {
-        color: #f5f5f7 !important;
-    }
-
-    .subtitle {
-        color: #a1a1a6 !important;
-    }
-
-    .apple-card {
-        background: rgba(28, 28, 30, 0.90);
-        border: 1px solid rgba(255,255,255,0.12);
-    }
-
-    [data-testid="stMetric"] {
-        background: rgba(44, 44, 46, 0.95);
-        border: 1px solid rgba(255,255,255,0.10);
-    }
-
-    [data-testid="stMetricLabel"],
-    [data-testid="stMetricValue"] {
-        color: #f5f5f7 !important;
-    }
-
-    [data-testid="stTabs"] button,
-    [data-testid="stTabs"] button p {
-        color: #f5f5f7 !important;
-    }
-
-    [data-testid="stTabs"] button[aria-selected="true"] {
-        background: rgba(255, 255, 255, 0.14) !important;
-        border-radius: 14px !important;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
-
-
-pies = {
-    "Alex PIE OT": {
-        "symbols": [
-            "LIN", "AMZN", "JPM", "PLD", "WMT",
-            "LLY", "NEE", "META", "XOM", "MSFT"
+groups = {
+    "🤖 AI TECH": {
+        "tickers": [
+            "AMD", "MRVL", "NTNX", "SMCI", "TSM", "INTC", "MU",
+            "SNDK", "ON", "ASML", "AVGO", "AMAT", "SNPS", "CDNS"
         ],
-        "investments": [
-            {"date": "2024-07-22", "amount": 374.21},
-            {"date": "2026-04-28", "amount": 74.70},
-            {"date": "2026-05-22", "amount": 59.83}
-        ],
-        "cash_flows": [
-            {"date": "2025-03-12", "type": "Taxă PIEs", "amount": -3.00},
-
-            {"date": "2025-09-02", "type": "Dividend WMT", "amount": 0.11},
-            {"date": "2025-09-10", "type": "Dividend XOM", "amount": 0.29},
-            {"date": "2025-09-10", "type": "Dividend LLY", "amount": 0.05},
-            {"date": "2025-09-11", "type": "Dividend MSFT", "amount": 0.06},
-            {"date": "2025-09-15", "type": "Dividend NEE", "amount": 0.26},
-            {"date": "2025-09-18", "type": "Dividend LIN", "amount": 0.12},
-            {"date": "2025-09-29", "type": "Dividend META", "amount": 0.04},
-            {"date": "2025-09-30", "type": "Dividend PLD", "amount": 0.27},
-            {"date": "2025-10-31", "type": "Dividend JPM", "amount": 0.24},
-
-            {"date": "2025-12-10", "type": "Dividend XOM", "amount": 0.30},
-            {"date": "2025-12-10", "type": "Dividend LLY", "amount": 0.05},
-            {"date": "2025-12-11", "type": "Dividend MSFT", "amount": 0.07},
-            {"date": "2025-12-15", "type": "Dividend NEE", "amount": 0.26},
-            {"date": "2025-12-17", "type": "Dividend LIN", "amount": 0.12},
-            {"date": "2025-12-23", "type": "Dividend META", "amount": 0.04},
-            {"date": "2025-12-31", "type": "Dividend PLD", "amount": 0.27},
-
-            {"date": "2026-01-05", "type": "Dividend WMT", "amount": 0.11},
-            {"date": "2026-02-02", "type": "Dividend JPM", "amount": 0.24},
-
-            {"date": "2026-03-10", "type": "Dividend XOM", "amount": 0.30},
-            {"date": "2026-03-10", "type": "Dividend LLY", "amount": 0.06},
-            {"date": "2026-03-12", "type": "Dividend MSFT", "amount": 0.07},
-            {"date": "2026-03-16", "type": "Dividend NEE", "amount": 0.29},
-            {"date": "2026-03-26", "type": "Dividend LIN", "amount": 0.12},
-            {"date": "2026-03-26", "type": "Dividend META", "amount": 0.04},
-            {"date": "2026-03-31", "type": "Dividend PLD", "amount": 0.29},
-
-            {"date": "2026-04-07", "type": "Dividend WMT", "amount": 0.12},
-            {"date": "2026-04-30", "type": "Dividend JPM", "amount": 0.24}
-        ]
+        "start_date": "2026-05-27",
+        "initial_amount": 1100
     },
 
-    "Alex Pie20": {
-        "symbols": [
-            "NVDA", "AAPL", "AMZN", "META", "COST",
-            "WMT", "BRK-B", "JPM", "V", "MA",
-            "LLY", "JNJ", "CAT", "GOOGL", "AVGO",
-            "XOM", "MSFT", "TSLA", "ORCL", "HD"
+    "💰 Alex Pai OT": {
+        "tickers": [
+            "LIN", "AMZN", "JPM", "PLD", "WMT", "LLY",
+            "NEE", "META", "XOM", "MSFT"
         ],
-        "investments": [
-            {"date": "2026-05-19", "amount": 1100.00}
-        ],
-        "cash_flows": []
+        "start_date": "2024-07-22",
+        "initial_amount": 374.21 + 74.70 + 59.83
     },
 
-    "AI TECH": {
-        "symbols": [
-            "AMD", "MRVL", "NTNX", "SMCI", "TSM",
-            "INTC", "MU", "SNDK", "ON", "ASML",
-            "AVGO", "AMAT", "SNPS", "CDNS"
+    "📊 Alex Pai 20": {
+        "tickers": [
+            "NVDA", "AAPL", "AMZN", "META", "COST", "WMT",
+            "BRK-B", "JPM", "V", "MA", "LLY", "JNJ",
+            "CAT", "GOOGL", "AVGO", "XOM", "MSFT",
+            "TSLA", "ORCL", "HD"
         ],
-        "investments": [
-            {"date": "2026-05-22", "amount": 1100.00}
-        ],
-        "cash_flows": []
+        "start_date": "2026-05-19",
+        "initial_amount": 1100
     }
 }
 
+# =========================
+# FUNCȚII
+# =========================
 
 @st.cache_data(ttl=900)
-def get_historical_price(symbol, date):
-    start = datetime.strptime(date, "%Y-%m-%d")
-    end = start + timedelta(days=10)
+def get_price_data(tickers, start_date):
+    """
+    Ia prețurile de la Yahoo Finance.
+    ttl=900 înseamnă refresh cam la 15 minute.
+    """
 
-    try:
-        data = yf.download(
-            symbol,
-            start=start.strftime("%Y-%m-%d"),
-            end=end.strftime("%Y-%m-%d"),
-            progress=False,
-            auto_adjust=True,
-            threads=False
-        )
+    end_date = date.today() + timedelta(days=1)
 
-        if data is not None and not data.empty:
-            close_value = data["Close"].dropna().iloc[0]
+    data = yf.download(
+        tickers,
+        start=start_date,
+        end=end_date,
+        progress=False,
+        auto_adjust=True,
+        group_by="ticker"
+    )
 
-            if hasattr(close_value, "item"):
-                return float(close_value.item())
-
-            return float(close_value)
-
-    except Exception:
-        pass
-
-    try:
-        ticker = yf.Ticker(symbol)
-        data = ticker.history(
-            start=start.strftime("%Y-%m-%d"),
-            end=end.strftime("%Y-%m-%d"),
-            auto_adjust=True
-        )
-
-        if data is not None and not data.empty:
-            close_value = data["Close"].dropna().iloc[0]
-
-            if hasattr(close_value, "item"):
-                return float(close_value.item())
-
-            return float(close_value)
-
-    except Exception:
-        pass
-
-    return None
+    return data
 
 
-@st.cache_data(ttl=900)
-def get_current_price(symbol):
-    try:
-        data = yf.download(
-            symbol,
-            period="5d",
-            progress=False,
-            auto_adjust=True,
-            threads=False
-        )
+def extract_close_prices(data, tickers):
+    """
+    Scoate prețurile Close pentru fiecare ticker.
+    Funcționează și pentru un singur ticker, și pentru mai multe.
+    """
 
-        if data is not None and not data.empty:
-            close_value = data["Close"].dropna().iloc[-1]
+    close_prices = pd.DataFrame()
 
-            if hasattr(close_value, "item"):
-                return float(close_value.item())
+    for ticker in tickers:
+        try:
+            if len(tickers) == 1:
+                close_prices[ticker] = data["Close"]
+            else:
+                close_prices[ticker] = data[ticker]["Close"]
+        except Exception:
+            close_prices[ticker] = None
 
-            return float(close_value)
-
-    except Exception:
-        pass
-
-    try:
-        ticker = yf.Ticker(symbol)
-        data = ticker.history(
-            period="5d",
-            auto_adjust=True
-        )
-
-        if data is not None and not data.empty:
-            close_value = data["Close"].dropna().iloc[-1]
-
-            if hasattr(close_value, "item"):
-                return float(close_value.item())
-
-            return float(close_value)
-
-    except Exception:
-        pass
-
-    return None
+    close_prices = close_prices.dropna(how="all")
+    return close_prices
 
 
-def format_money(value):
-    return f"${value:,.2f}"
+def calculate_portfolio(close_prices, initial_amount):
+    """
+    Presupune că suma inițială este împărțită egal între acțiuni.
+    Calculează evoluția portofoliului de la prima zi disponibilă.
+    """
+
+    valid_tickers = close_prices.columns.dropna()
+    number_of_stocks = len(valid_tickers)
+
+    if number_of_stocks == 0 or close_prices.empty:
+        return None, None
+
+    amount_per_stock = initial_amount / number_of_stocks
+
+    first_prices = close_prices.iloc[0]
+    shares = amount_per_stock / first_prices
+
+    portfolio_values = close_prices * shares
+    total_portfolio = portfolio_values.sum(axis=1)
+
+    return total_portfolio, shares
 
 
-def format_percent(value):
-    return f"{value:.2f}%"
+# =========================
+# UI
+# =========================
 
-
-def color_number(value):
-    try:
-        value = float(value)
-    except Exception:
-        return "color: #8e8e93; font-weight: 700"
-
-    if value > 0:
-        return "color: #00a651; font-weight: 800"
-    elif value < 0:
-        return "color: #ff3b30; font-weight: 800"
-
-    return "color: #8e8e93; font-weight: 700"
-
-
-st.markdown(
-    '<div class="main-title">Investimental Dashboard</div>',
-    unsafe_allow_html=True
+selected_group_name = st.sidebar.selectbox(
+    "Alege portofoliul:",
+    list(groups.keys())
 )
 
-st.markdown(
-    '<div class="subtitle">Dashboard cu yfinance, pai-uri, profit/pierdere, dividende și taxe.</div>',
-    unsafe_allow_html=True
+selected_group = groups[selected_group_name]
+
+tickers = selected_group["tickers"]
+start_date = selected_group["start_date"]
+initial_amount = selected_group["initial_amount"]
+
+st.sidebar.write("### Detalii portofoliu")
+st.sidebar.write(f"Data de start: **{start_date}**")
+st.sidebar.write(f"Suma inițială: **${initial_amount:,.2f}**")
+st.sidebar.write(f"Număr acțiuni: **{len(tickers)}**")
+
+st.subheader(selected_group_name)
+
+st.write(
+    f"Calculul pentru acest portofoliu începe din **{start_date}** "
+    f"și presupune împărțirea egală a sumei de **${initial_amount:,.2f}** "
+    f"între acțiunile din listă."
 )
 
+# =========================
+# DATE
+# =========================
 
-tabs = st.tabs([
-    "📌 Overview",
-    "Alex PIE OT",
-    "Alex Pie20",
-    "AI TECH"
-])
+data = get_price_data(tickers, start_date)
+close_prices = extract_close_prices(data, tickers)
 
-portfolio_rows = []
-pie_results = {}
+if close_prices.empty:
+    st.error("Nu s-au putut încărca datele pentru acest portofoliu.")
+    st.stop()
 
-grand_total_invested = 0
-grand_total_value = 0
+total_portfolio, shares = calculate_portfolio(close_prices, initial_amount)
 
+if total_portfolio is None:
+    st.error("Nu s-a putut calcula portofoliul.")
+    st.stop()
 
-for pie_name, pie in pies.items():
+# =========================
+# REZULTATE
+# =========================
 
-    total_invested = sum(item["amount"] for item in pie["investments"])
-    total_stock_value = 0
+start_value = total_portfolio.iloc[0]
+current_value = total_portfolio.iloc[-1]
+profit_loss = current_value - start_value
+profit_loss_percent = (profit_loss / start_value) * 100
 
-    rows = []
-    investment_summaries = []
+col1, col2, col3, col4 = st.columns(4)
 
-    cash_flows = pie.get("cash_flows", [])
-    cash_total = sum(item["amount"] for item in cash_flows)
-    dividends_total = sum(item["amount"] for item in cash_flows if item["amount"] > 0)
-    fees_total = sum(item["amount"] for item in cash_flows if item["amount"] < 0)
+col1.metric("Valoare inițială", f"${start_value:,.2f}")
+col2.metric("Valoare actuală", f"${current_value:,.2f}")
+col3.metric("Profit / Pierdere", f"${profit_loss:,.2f}")
+col4.metric("Performanță", f"{profit_loss_percent:.2f}%")
 
-    missing_prices = 0
+st.divider()
 
-    for investment in pie["investments"]:
+# =========================
+# GRAFIC PORTOFOLIU
+# =========================
 
-        date = investment["date"]
-        amount = investment["amount"]
-        symbols = pie["symbols"]
-        amount_per_stock = amount / len(symbols)
+st.write("### Evoluția portofoliului")
 
-        investment_current_value = 0
-        investment_missing = 0
+chart_data = total_portfolio.rename("Valoare portofoliu")
+st.line_chart(chart_data)
 
-        for symbol in symbols:
+# =========================
+# TABEL ACȚIUNI
+# =========================
 
-            buy_price = get_historical_price(symbol, date)
-            current_price = get_current_price(symbol)
+st.write("### Performanță pe fiecare acțiune")
 
-            if buy_price is None or current_price is None:
-                missing_prices += 1
-                investment_missing += 1
+table_rows = []
 
-                rows.append({
-                    "Data": date,
-                    "Symbol": symbol,
-                    "Investit": round(amount_per_stock, 2),
-                    "Buy": "N/A",
-                    "Now": "N/A",
-                    "Valoare": "N/A",
-                    "P/L": "N/A",
-                    "%": "N/A",
-                    "Status": "Lipsă preț"
-                })
-                continue
+for ticker in close_prices.columns:
+    try:
+        start_price = close_prices[ticker].iloc[0]
+        current_price = close_prices[ticker].iloc[-1]
+        change = current_price - start_price
+        change_percent = (change / start_price) * 100
 
-            shares = amount_per_stock / buy_price
-            current_value = shares * current_price
-            profit_loss = current_value - amount_per_stock
-            percent = (profit_loss / amount_per_stock) * 100
-
-            total_stock_value += current_value
-            investment_current_value += current_value
-
-            rows.append({
-                "Data": date,
-                "Symbol": symbol,
-                "Investit": round(amount_per_stock, 2),
-                "Buy": round(buy_price, 2),
-                "Now": round(current_price, 2),
-                "Valoare": round(current_value, 2),
-                "P/L": round(profit_loss, 2),
-                "%": round(percent, 2),
-                "Status": "OK"
-            })
-
-        investment_profit = investment_current_value - amount
-        investment_percent = (investment_profit / amount) * 100 if amount else 0
-
-        investment_summaries.append({
-            "date": date,
-            "amount": amount,
-            "current_value": investment_current_value,
-            "profit": investment_profit,
-            "percent": investment_percent,
-            "missing": investment_missing
+        table_rows.append({
+            "Ticker": ticker,
+            "Preț start": round(start_price, 2),
+            "Preț actual": round(current_price, 2),
+            "Diferență $": round(change, 2),
+            "Diferență %": round(change_percent, 2),
+            "Acțiuni estimate": round(shares[ticker], 6)
         })
+    except Exception:
+        pass
 
-    total_value = total_stock_value + cash_total
-    total_profit = total_value - total_invested
-    total_percent = (total_profit / total_invested) * 100 if total_invested else 0
+performance_df = pd.DataFrame(table_rows)
 
-    grand_total_invested += total_invested
-    grand_total_value += total_value
+st.dataframe(
+    performance_df,
+    use_container_width=True,
+    hide_index=True
+)
 
-    portfolio_rows.append({
-        "Pai": pie_name,
-        "Investit": round(total_invested, 2),
-        "Valoare acțiuni": round(total_stock_value, 2),
-        "Dividende/Taxe": round(cash_total, 2),
-        "Valoare totală": round(total_value, 2),
-        "Profit/Pierdere": round(total_profit, 2),
-        "Procent %": round(total_percent, 2),
-        "Prețuri lipsă": missing_prices
-    })
+# =========================
+# LISTĂ TICKERE
+# =========================
 
-    pie_results[pie_name] = {
-        "total_invested": total_invested,
-        "total_stock_value": total_stock_value,
-        "cash_total": cash_total,
-        "dividends_total": dividends_total,
-        "fees_total": fees_total,
-        "total_value": total_value,
-        "total_profit": total_profit,
-        "total_percent": total_percent,
-        "rows": rows,
-        "investment_summaries": investment_summaries,
-        "cash_flows": cash_flows,
-        "missing_prices": missing_prices
-    }
+with st.expander("Vezi tickerele din acest portofoliu"):
+    st.write(", ".join(tickers))
 
-
-with tabs[0]:
-
-    grand_profit = grand_total_value - grand_total_invested
-    grand_percent = (grand_profit / grand_total_invested) * 100 if grand_total_invested else 0
-
-    st.markdown('<div class="apple-card">', unsafe_allow_html=True)
-
-    col1, col2, col3, col4 = st.columns(4)
-
-    col1.metric("Total investit", format_money(grand_total_invested))
-    col2.metric("Valoare totală", format_money(grand_total_value))
-    col3.metric(
-        "Profit/Pierdere",
-        format_money(grand_profit),
-        delta=format_money(grand_profit)
-    )
-    col4.metric(
-        "Procent total",
-        format_percent(grand_percent),
-        delta=format_percent(grand_percent)
-    )
-
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    overview_df = pd.DataFrame(portfolio_rows)
-
-    styled = overview_df.style.map(
-        color_number,
-        subset=["Profit/Pierdere"]
-    ).map(
-        color_number,
-        subset=["Procent %"]
-    )
-
-    st.dataframe(
-        styled,
-        use_container_width=True,
-        hide_index=True
-    )
-
-    chart_df = overview_df[["Pai", "Profit/Pierdere"]].set_index("Pai")
-    st.bar_chart(chart_df, use_container_width=True)
-
-
-for index, pie_name in enumerate(["Alex PIE OT", "Alex Pie20", "AI TECH"], start=1):
-
-    with tabs[index]:
-
-        result = pie_results[pie_name]
-
-        if result["missing_prices"] > 0:
-            st.warning(
-                f"Atenție: {result['missing_prices']} prețuri nu au fost încărcate. "
-                "Nu sunt calculate ca -100%, ci apar ca N/A."
-            )
-
-        st.markdown('<div class="apple-card">', unsafe_allow_html=True)
-
-        st.subheader(pie_name)
-
-        col1, col2, col3, col4 = st.columns(4)
-
-        col1.metric("Total investit", format_money(result["total_invested"]))
-        col2.metric("Valoare totală", format_money(result["total_value"]))
-        col3.metric(
-            "Profit/Pierdere",
-            format_money(result["total_profit"]),
-            delta=format_money(result["total_profit"])
-        )
-        col4.metric(
-            "Procent total",
-            format_percent(result["total_percent"]),
-            delta=format_percent(result["total_percent"])
-        )
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        c1, c2, c3 = st.columns(3)
-
-        c1.metric("Valoare acțiuni", format_money(result["total_stock_value"]))
-        c2.metric("Dividende", format_money(result["dividends_total"]))
-        c3.metric("Taxe", format_money(result["fees_total"]))
-
-        for summary in result["investment_summaries"]:
-
-            st.subheader(f"Investiție {summary['date']}")
-
-            c1, c2, c3, c4 = st.columns(4)
-
-            c1.metric("Investit", format_money(summary["amount"]))
-            c2.metric("Valoare actuală", format_money(summary["current_value"]))
-            c3.metric(
-                "Profit/Pierdere",
-                format_money(summary["profit"]),
-                delta=format_money(summary["profit"])
-            )
-            c4.metric(
-                "Procent",
-                format_percent(summary["percent"]),
-                delta=format_percent(summary["percent"])
-            )
-
-            if summary["missing"] > 0:
-                st.caption(f"{summary['missing']} simboluri au preț lipsă pentru această investiție.")
-
-        df = pd.DataFrame(result["rows"])
-
-        styled_df = df.style.map(
-            color_number,
-            subset=["P/L"]
-        ).map(
-            color_number,
-            subset=["%"]
-        )
-
-        st.dataframe(
-            styled_df,
-            use_container_width=True,
-            hide_index=True
-        )
-
-        if result["cash_flows"]:
-            st.subheader("Dividende și taxe")
-
-            cash_df = pd.DataFrame(result["cash_flows"])
-            cash_df["amount"] = cash_df["amount"].round(2)
-
-            st.dataframe(
-                cash_df,
-                use_container_width=True,
-                hide_index=True
-            )
-
-        numeric_df = df[df["P/L"] != "N/A"].copy()
-
-        if not numeric_df.empty:
-            numeric_df["P/L"] = numeric_df["P/L"].astype(float)
-            chart_df = numeric_df[["Symbol", "P/L"]].groupby("Symbol").sum()
-            st.bar_chart(chart_df, use_container_width=True)
+st.caption(
+    "Datele sunt luate prin yfinance/Yahoo Finance și pot avea întârziere sau mici diferențe față de broker."
+)
