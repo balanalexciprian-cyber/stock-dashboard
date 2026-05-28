@@ -276,6 +276,70 @@ st.markdown(
             text-align: right;
         }}
 
+        .bvb-badge {{
+            display: inline-block;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            margin-right: 6px;
+        }}
+
+        .bvb-ron {{
+            background: rgba(37,99,235,0.10);
+            color: {blue};
+            border: 1px solid rgba(37,99,235,0.18);
+        }}
+
+        .bvb-usd {{
+            background: {green_bg};
+            color: {green};
+            border: 1px solid rgba(34,197,94,0.20);
+        }}
+
+        .bucket-card {{
+            background: {bg_card};
+            border: 1px solid {border};
+            border-radius: 18px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+        }}
+
+        .bucket-line {{
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-start;
+            gap:12px;
+        }}
+
+        .bucket-kicker {{
+            color:{text_soft};
+            font-size:12px;
+            margin-top:4px;
+        }}
+
+        .bucket-value {{
+            color:{text_main};
+            font-size:1.05rem;
+            font-weight:800;
+            text-align:right;
+        }}
+
+        .exchange-box {{
+            background: linear-gradient(135deg, {bg_card} 0%, {bg_subtle} 100%);
+            border: 1px solid {border};
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 14px;
+        }}
+
+        .exchange-value {{
+            color:{text_main};
+            font-size:2rem;
+            font-weight:800;
+            line-height:1.05;
+        }}
+
         div[data-testid="stMetric"] {{
             background: {bg_card};
             border: 1px solid {border};
@@ -748,11 +812,7 @@ with left:
         elif result["mode"] == "bvb_manual":
             row_pct = result["invested_change_pct"]
             row_label = f"Invested {row_pct:+.2f}%"
-            sub_line = (
-                f"RON total: {result['total_ron']:,.2f} | "
-                f"Cash RON: {result['cash_ron']:,.2f} | "
-                f"Est. USD: ${result['current_usd']:,.2f}"
-            )
+            sub_line = f"RON total: {result['total_ron']:,.2f} | Est. USD: ${result['current_usd']:,.2f}"
         elif result["mode"] == "manual_with_positions":
             row_pct = result["invested_change_pct"]
             row_label = f"Invested {row_pct:+.2f}%"
@@ -767,15 +827,15 @@ with left:
 
         st.markdown(
             f"""
-            <div class="asset-row">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="bucket-card">
+                <div class="bucket-line">
                     <div>
                         <div class="asset-name">{result['name']}</div>
-                        <div class="asset-sub">{sub_line}</div>
+                        <div class="bucket-kicker">{sub_line}</div>
                     </div>
-                    <div style="text-align:right;">
-                        <div class="asset-name">${result['current_usd']:,.2f}</div>
-                        <div class="{pill_class}">{row_label}</div>
+                    <div>
+                        <div class="bucket-value">${result['current_usd']:,.2f}</div>
+                        <div class="{pill_class}" style="margin-top:6px;">{row_label}</div>
                     </div>
                 </div>
             </div>
@@ -802,9 +862,20 @@ with left:
             if result["mode"] == "crypto_manual":
                 st.markdown(
                     f"""
-                    <div class="notice-box">
-                        <b>Est. Total Value:</b> ${result['current_usd']:.2f}<br>
-                        <b>Today's PnL:</b> ${result['today_pnl']:+.2f} ({result['today_pnl_pct']:+.2f}%)<br><br>
+                    <div class="exchange-box">
+                        <div class="summary-label">Est. Total Value</div>
+                        <div class="exchange-value">${result['current_usd']:.2f}</div>
+                        <div class="{'summary-positive' if result['today_pnl'] >= 0 else 'summary-negative'}">
+                            Today's PnL: ${result['today_pnl']:+.2f} ({result['today_pnl_pct']:+.2f}%)
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                st.markdown(
+                    f"""
+                    <div class="notice-box" style="margin-bottom:12px;">
                         {result['note']}
                     </div>
                     """,
@@ -851,17 +922,30 @@ with left:
                     unsafe_allow_html=True,
                 )
 
-                cols = st.columns(2)
                 for i, pos in enumerate(result["positions"]):
-                    with cols[i % 2]:
-                        st.metric(
-                            label=pos["ticker"],
-                            value=f"{pos['market_price_ron']:.2f} RON",
-                            delta=f"{pos['return_pct']:.2f}%"
-                        )
-                        st.caption(f"Cantitate: {pos['quantity']} | Cost mediu: {pos['cost_avg_ron']:.2f} RON")
-                        st.caption(f"Evaluare: {pos['market_value_ron']:.2f} RON (~${pos['market_value_ron'] / result['usdron_rate']:.2f})")
-                        st.caption(f"P/L: {pos['profit_loss_ron']:+.2f} RON")
+                    badge_row = (
+                        f'<span class="bvb-badge bvb-ron">{pos["market_value_ron"]:.2f} RON</span>'
+                        f'<span class="bvb-badge bvb-usd">${pos["market_value_ron"] / result["usdron_rate"]:.2f}</span>'
+                    )
+                    st.markdown(
+                        f"""
+                        <div class="crypto-card">
+                            <div style="display:flex; justify-content:space-between; gap:16px; align-items:flex-start;">
+                                <div>
+                                    <div class="crypto-symbol">{pos['ticker']}</div>
+                                    <div class="crypto-name">{pos['name']}</div>
+                                    <div style="margin-top:10px;">{badge_row}</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div class="crypto-amount">{pos['market_price_ron']:.2f} RON</div>
+                                    <div class="crypto-value">Cantitate: {pos['quantity']} | Cost mediu: {pos['cost_avg_ron']:.2f} RON</div>
+                                    <div class="crypto-value">P/L: {pos['profit_loss_ron']:+.2f} RON | {pos['return_pct']:+.2f}%</div>
+                                </div>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
                 continue
 
             if result["mode"] == "manual_with_positions":
@@ -997,14 +1081,24 @@ with right:
         unsafe_allow_html=True,
     )
 
+    st.markdown(
+        f"""
+        <div class="sidebar-card">
+            <div class="sidebar-title">FX Estimate</div>
+            <div style="color:{text_main}; font-size:1.1rem; font-weight:800;">1 USD = {usdron_rate:.4f} RON</div>
+            <div style="color:{text_soft}; font-size:0.84rem; margin-top:4px;">Folosit pentru conversia BVB în USD</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
     if best_position:
-        best_suffix = "%" if "return_pct" in best_position else ""
         st.markdown(
             f"""
             <div class="sidebar-card">
                 <div class="sidebar-title">Top Performer</div>
                 <div style="color:{text_main}; font-size:1.1rem; font-weight:800;">{best_position['ticker']}</div>
-                <div style="color:{green}; font-weight:700; margin-top:4px;">{best_position['return_pct']:+.2f}{best_suffix}</div>
+                <div style="color:{green}; font-weight:700; margin-top:4px;">{best_position['return_pct']:+.2f}%</div>
                 <div style="color:{text_soft}; font-size:0.84rem; margin-top:4px;">{best_position['portfolio']}</div>
             </div>
             """,
