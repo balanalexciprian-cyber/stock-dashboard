@@ -2,177 +2,251 @@ import streamlit as st
 import yfinance as yf
 from datetime import date
 
-st.set_page_config(page_title="Stock Live Dashboard", layout="wide", page_icon="📈")
+st.set_page_config(page_title="Portfolio Tracker", layout="wide", page_icon="📈")
 
-st.markdown("""
+theme_mode = st.sidebar.selectbox("Temă", ["Dark", "Light"])
+
+if theme_mode == "Dark":
+    bg_main = "#071226"
+    bg_panel = "#121c34"
+    bg_card = "#1a233b"
+    bg_soft = "#202a43"
+    border = "rgba(255,255,255,0.06)"
+    text_main = "#f8fafc"
+    text_soft = "#94a3b8"
+    green = "#4ade80"
+    green_bg = "rgba(74,222,128,0.16)"
+    blue = "#38bdf8"
+    orange = "#f59e0b"
+    red = "#f87171"
+    donut_center = "#0d172d"
+else:
+    bg_main = "#f3f7fb"
+    bg_panel = "#ffffff"
+    bg_card = "#ffffff"
+    bg_soft = "#eef4fb"
+    border = "rgba(15,23,42,0.08)"
+    text_main = "#0f172a"
+    text_soft = "#64748b"
+    green = "#16a34a"
+    green_bg = "rgba(22,163,74,0.10)"
+    blue = "#2563eb"
+    orange = "#d97706"
+    red = "#dc2626"
+    donut_center = "#ffffff"
+
+st.markdown(f"""
 <style>
-    .main > div {
-        padding-top: 1.2rem;
-    }
+    .stApp {{
+        background: {bg_main};
+    }}
 
-    .block-container {
+    .block-container {{
         max-width: 1450px;
         padding-top: 1rem;
         padding-bottom: 2rem;
-    }
+    }}
 
-    h1, h2, h3 {
-        letter-spacing: -0.02em;
-    }
-
-    .hero {
-        background: linear-gradient(135deg, #0f172a 0%, #111827 45%, #0b3b2e 100%);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 22px;
-        padding: 26px 28px;
+    .hero {{
+        background: {bg_panel};
+        border: 1px solid {border};
+        border-radius: 26px;
+        padding: 26px;
         margin-bottom: 18px;
-        box-shadow: 0 16px 40px rgba(0,0,0,0.22);
-    }
+        box-shadow: 0 20px 44px rgba(0,0,0,0.12);
+    }}
 
-    .hero-title {
-        font-size: 2.1rem;
+    .hero-kicker {{
+        color: {blue};
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }}
+
+    .hero-title {{
+        color: {text_main};
+        font-size: 2.4rem;
         font-weight: 800;
-        color: white;
-        margin-bottom: 6px;
-    }
+        line-height: 1.05;
+        margin-bottom: 8px;
+    }}
 
-    .hero-subtitle {
-        color: #cbd5e1;
+    .hero-subtitle {{
+        color: {text_soft};
         font-size: 0.98rem;
-    }
+        max-width: 780px;
+    }}
 
-    .summary-card {
-        background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 18px;
-        padding: 18px 18px 14px 18px;
-        box-shadow: 0 10px 24px rgba(0,0,0,0.16);
-        margin-bottom: 8px;
-    }
+    .glass-card {{
+        background: {bg_panel};
+        border: 1px solid {border};
+        border-radius: 22px;
+        padding: 18px;
+        box-shadow: 0 16px 32px rgba(0,0,0,0.10);
+    }}
 
-    .summary-label {
-        color: #94a3b8;
+    .summary-card {{
+        background: {bg_card};
+        border: 1px solid {border};
+        border-radius: 20px;
+        padding: 18px;
+        min-height: 118px;
+    }}
+
+    .summary-label {{
+        color: {text_soft};
         font-size: 0.84rem;
-        margin-bottom: 8px;
-    }
+        margin-bottom: 10px;
+    }}
 
-    .summary-value {
-        color: white;
+    .summary-value {{
+        color: {text_main};
         font-size: 1.7rem;
         font-weight: 800;
-        line-height: 1.1;
-    }
+        line-height: 1.05;
+    }}
 
-    .summary-delta-pos {
-        color: #22c55e;
-        font-size: 0.9rem;
+    .summary-positive {{
+        color: {green};
         margin-top: 8px;
-        font-weight: 600;
-    }
-
-    .summary-delta-neg {
-        color: #ef4444;
-        font-size: 0.9rem;
-        margin-top: 8px;
-        font-weight: 600;
-    }
-
-    .section-box {
-        background: linear-gradient(180deg, rgba(15,23,42,0.92) 0%, rgba(17,24,39,0.92) 100%);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 20px;
-        padding: 18px 18px 8px 18px;
-        margin-bottom: 18px;
-        box-shadow: 0 14px 28px rgba(0,0,0,0.14);
-    }
-
-    .section-title {
-        color: white;
-        font-size: 1.18rem;
-        font-weight: 750;
-        margin-bottom: 12px;
-    }
-
-    .mini-note {
-        color: #94a3b8;
-        font-size: 0.88rem;
-        margin-top: -2px;
-        margin-bottom: 14px;
-    }
-
-    .legend-card {
-        background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 18px;
-        padding: 14px 14px 8px 14px;
-        margin-top: 10px;
-    }
-
-    div[data-testid="stMetric"] {
-        background: rgba(15, 23, 42, 0.78);
-        border: 1px solid rgba(255,255,255,0.08);
-        padding: 14px 14px 10px 14px;
-        border-radius: 16px;
-        box-shadow: 0 8px 18px rgba(0,0,0,0.12);
-    }
-
-    div[data-testid="stMetricLabel"] {
-        color: #cbd5e1;
-    }
-
-    div[data-testid="stMetricValue"] {
-        color: white;
-        font-weight: 800;
-    }
-
-    div[data-testid="stMetricDelta"] {
-        font-weight: 700;
-    }
-
-    .info-strip {
-        background: rgba(30, 64, 175, 0.16);
-        border: 1px solid rgba(59,130,246,0.30);
-        color: #dbeafe;
-        border-radius: 14px;
-        padding: 10px 12px;
-        margin: 10px 0 8px 0;
         font-size: 0.92rem;
-    }
+        font-weight: 700;
+    }}
 
-    .footer-note {
-        color: #94a3b8;
-        font-size: 0.84rem;
-        margin-top: 12px;
-    }
+    .summary-negative {{
+        color: {red};
+        margin-top: 8px;
+        font-size: 0.92rem;
+        font-weight: 700;
+    }}
+
+    .section-title {{
+        color: {text_main};
+        font-size: 1.15rem;
+        font-weight: 780;
+        margin-bottom: 6px;
+    }}
+
+    .section-subtitle {{
+        color: {text_soft};
+        font-size: 0.9rem;
+        margin-bottom: 14px;
+    }}
+
+    .asset-row {{
+        background: {bg_card};
+        border: 1px solid {border};
+        border-radius: 18px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+    }}
+
+    .asset-name {{
+        color: {text_main};
+        font-size: 1rem;
+        font-weight: 700;
+    }}
+
+    .asset-sub {{
+        color: {text_soft};
+        font-size: 0.82rem;
+        margin-top: 2px;
+    }}
+
+    .pill-pos {{
+        display: inline-block;
+        background: {green_bg};
+        color: {green};
+        border: 1px solid rgba(34,197,94,0.24);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }}
+
+    .pill-neg {{
+        display: inline-block;
+        background: rgba(239,68,68,0.10);
+        color: {red};
+        border: 1px solid rgba(239,68,68,0.22);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }}
+
+    .sidebar-card {{
+        background: {bg_panel};
+        border: 1px solid {border};
+        border-radius: 22px;
+        padding: 16px;
+        margin-bottom: 14px;
+    }}
+
+    .sidebar-title {{
+        color: {text_main};
+        font-size: 1rem;
+        font-weight: 760;
+        margin-bottom: 10px;
+    }}
+
+    .legend-item {{
+        display:flex;
+        align-items:center;
+        margin-bottom:8px;
+    }}
+
+    .legend-color {{
+        width:12px;
+        height:12px;
+        border-radius:4px;
+        margin-right:8px;
+    }}
+
+    .legend-text {{
+        color:{text_main};
+        font-size:13px;
+    }}
+
+    .legend-sub {{
+        color:{text_soft};
+        font-size:12px;
+    }}
+
+    div[data-testid="stMetric"] {{
+        background: {bg_card};
+        border: 1px solid {border};
+        border-radius: 18px;
+        padding: 14px;
+    }}
+
+    div[data-testid="stMetricLabel"] {{
+        color: {text_soft};
+    }}
+
+    div[data-testid="stMetricValue"] {{
+        color: {text_main};
+        font-weight: 800;
+    }}
+
+    div[data-testid="stMetricDelta"] {{
+        font-weight: 700;
+    }}
 </style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<div class="hero">
-    <div class="hero-title">📊 Prețuri LIVE - Dashboard Personal</div>
-    <div class="hero-subtitle">
-        Monitorizare portofoliu, alocare pe zone, cash neinvestit și performanță pe fiecare poziție.
-    </div>
-</div>
 """, unsafe_allow_html=True)
 
 PORTFOLIOS = [
     {
         "name": "🤖 AI TECH",
-        "tickers": [
-            "AMAT", "MU", "MSTR", "AMD", "MRVL", "ASML", "TSM",
-            "SNPS", "SNDK", "NTNX", "INTC", "AVGO", "CDNS", "ON"
-        ],
+        "tickers": ["AMAT", "MU", "MSTR", "AMD", "MRVL", "ASML", "TSM", "SNPS", "SNDK", "NTNX", "INTC", "AVGO", "CDNS", "ON"],
         "buy_date": date(2026, 5, 27),
         "amount_per_stock": 78.44,
         "cash_additions": [],
     },
     {
         "name": "💰 PIE OT Investimental",
-        "tickers": [
-            "LIN", "XOM", "PLD", "NEE", "MSFT",
-            "AMZN", "WMT", "META", "JPM", "LLY"
-        ],
+        "tickers": ["LIN", "XOM", "PLD", "NEE", "MSFT", "AMZN", "WMT", "META", "JPM", "LLY"],
         "buy_date": date(2024, 7, 22),
         "amount_per_stock": 37.33,
         "cash_additions": [
@@ -181,21 +255,17 @@ PORTFOLIOS = [
         ],
     },
     {
-        "name": "📈 Alex PIE 20 (19 Mai 2026)",
-        "tickers": [
-            "COST", "V", "ORCL", "JNJ", "HD", "XOM", "CAT", "MSFT", "WMT", "MA",
-            "AMZN", "GOOG", "BRK-B", "NVDA", "TSLA", "JPM", "LLY", "META", "AVGO", "AAPL"
-        ],
+        "name": "📈 Alex PIE 20",
+        "tickers": ["COST", "V", "ORCL", "JNJ", "HD", "XOM", "CAT", "MSFT", "WMT", "MA", "AMZN", "GOOG", "BRK-B", "NVDA", "TSLA", "JPM", "LLY", "META", "AVGO", "AAPL"],
         "buy_date": date(2026, 5, 19),
         "amount_per_stock": 54.91,
         "cash_additions": [],
     },
 ]
 
-st.sidebar.header("⚙️ Setări")
-if st.sidebar.button("🔄 Refresh Manual", use_container_width=True):
+st.sidebar.markdown(f'<div class="sidebar-title">Control Panel</div>', unsafe_allow_html=True)
+if st.sidebar.button("Refresh Manual", use_container_width=True):
     st.rerun()
-
 
 def load_history(ticker: str):
     history = yf.Ticker(ticker).history(period="5y", auto_adjust=False)
@@ -203,341 +273,292 @@ def load_history(ticker: str):
         return history
     return history[["Close"]].dropna()
 
-
 def get_price_on_or_before(history, target_date: date):
     rows = history[history.index.date <= target_date]
     if rows.empty:
         return None
     return float(rows["Close"].iloc[-1])
 
-
 def get_ticker_data(ticker: str, buy_date: date):
     try:
         history = load_history(ticker)
         if history.empty:
-            return None, "Nu există istoric pentru acest ticker."
-
+            return None, "Fără istoric"
         current_price = float(history["Close"].iloc[-1])
         buy_price = get_price_on_or_before(history, buy_date)
-
         if buy_price is None:
-            return None, f"Nu există preț disponibil pentru data {buy_date:%d.%m.%Y}."
-
-        return {
-            "price": current_price,
-            "buy_price": buy_price,
-        }, None
-
+            return None, "Fără preț la data cumpărării"
+        return {"price": current_price, "buy_price": buy_price}, None
     except Exception as e:
         return None, str(e)
 
-
-def format_cash_additions(cash_additions):
-    if not cash_additions:
-        return "Fără cash suplimentar"
-    return " + ".join(
-        f"${item['amount']:.2f} din {item['date']:%d.%m.%Y}"
-        for item in cash_additions
-    )
-
-
 portfolio_totals = []
-total_cash_global = 0.0
-all_profit_loss = []
-best_position = None
-worst_position = None
+portfolio_results = []
 global_total_now = 0.0
 global_total_in = 0.0
-
-portfolio_results = []
+total_cash_global = 0.0
+best_position = None
+worst_position = None
 
 for portfolio in PORTFOLIOS:
-    buy_date = portfolio["buy_date"]
-    tickers = portfolio["tickers"]
-    amount_per_stock = portfolio["amount_per_stock"]
-    cash_additions = portfolio["cash_additions"]
-
-    invested_total = amount_per_stock * len(tickers)
-    cash_total = sum(item["amount"] for item in cash_additions)
-
     positions = []
-    failed_tickers = []
+    failed = []
     total_positions_value = 0.0
+    invested_total = portfolio["amount_per_stock"] * len(portfolio["tickers"])
+    cash_total = sum(x["amount"] for x in portfolio["cash_additions"])
 
-    for ticker in tickers:
-        data, error = get_ticker_data(ticker, buy_date)
-
+    for ticker in portfolio["tickers"]:
+        data, error = get_ticker_data(ticker, portfolio["buy_date"])
         if error:
-            failed_tickers.append(f"{ticker}: {error}")
+            failed.append(f"{ticker}: {error}")
             continue
 
-        current_value = amount_per_stock * (data["price"] / data["buy_price"])
-        profit_loss = current_value - amount_per_stock
-        return_pct = (profit_loss / amount_per_stock) * 100 if amount_per_stock else 0
+        current_value = portfolio["amount_per_stock"] * (data["price"] / data["buy_price"])
+        profit_loss = current_value - portfolio["amount_per_stock"]
+        return_pct = (profit_loss / portfolio["amount_per_stock"]) * 100 if portfolio["amount_per_stock"] else 0
 
         position = {
             "ticker": ticker,
             "price": data["price"],
-            "buy_price": data["buy_price"],
-            "invested": amount_per_stock,
+            "invested": portfolio["amount_per_stock"],
             "current_value": current_value,
             "profit_loss": profit_loss,
             "return_pct": return_pct,
             "portfolio": portfolio["name"],
         }
         positions.append(position)
-
         total_positions_value += current_value
-        all_profit_loss.append(position)
 
         if best_position is None or return_pct > best_position["return_pct"]:
             best_position = position
-
         if worst_position is None or return_pct < worst_position["return_pct"]:
             worst_position = position
 
     portfolio_total_now = total_positions_value + cash_total
     portfolio_total_in = invested_total + cash_total
-    total_change_pct = (
-        (portfolio_total_now - portfolio_total_in) / portfolio_total_in * 100
-        if portfolio_total_in else 0
-    )
-
-    portfolio_totals.append({
-        "Categorie": portfolio["name"],
-        "Valoare": total_positions_value
-    })
-    total_cash_global += cash_total
-    global_total_now += portfolio_total_now
-    global_total_in += portfolio_total_in
+    change_pct = ((portfolio_total_now - portfolio_total_in) / portfolio_total_in * 100) if portfolio_total_in else 0
 
     portfolio_results.append({
         "name": portfolio["name"],
-        "buy_date": buy_date,
-        "tickers": tickers,
-        "amount_per_stock": amount_per_stock,
-        "cash_additions": cash_additions,
-        "invested_total": invested_total,
-        "cash_total": cash_total,
+        "buy_date": portfolio["buy_date"],
         "positions": positions,
-        "failed_tickers": failed_tickers,
+        "failed": failed,
+        "cash_total": cash_total,
+        "invested_total": invested_total,
         "total_positions_value": total_positions_value,
         "portfolio_total_now": portfolio_total_now,
         "portfolio_total_in": portfolio_total_in,
-        "total_change_pct": total_change_pct,
+        "change_pct": change_pct,
+        "ticker_count": len(portfolio["tickers"]),
+        "cash_additions": portfolio["cash_additions"],
     })
+
+    portfolio_totals.append({"Categorie": portfolio["name"], "Valoare": total_positions_value})
+    global_total_now += portfolio_total_now
+    global_total_in += portfolio_total_in
+    total_cash_global += cash_total
+
+if total_cash_global > 0:
+    portfolio_totals.append({"Categorie": "💵 Cash", "Valoare": total_cash_global})
 
 global_profit = global_total_now - global_total_in
 global_profit_pct = (global_profit / global_total_in * 100) if global_total_in else 0
 
-top1, top2, top3, top4 = st.columns(4)
+st.markdown(f"""
+<div class="hero">
+    <div class="hero-kicker">Dashboard</div>
+    <div class="hero-title">My Assets</div>
+    <div class="hero-subtitle">
+        O vedere mai curată asupra portofoliului tău: valoare totală, cash, alocare pe PIE-uri și performanță pe fiecare poziție.
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-with top1:
-    st.markdown(f"""
-    <div class="summary-card">
-        <div class="summary-label">Valoare totală</div>
-        <div class="summary-value">${global_total_now:,.2f}</div>
-        <div class="{'summary-delta-pos' if global_profit >= 0 else 'summary-delta-neg'}">
-            {'+' if global_profit >= 0 else ''}${global_profit:,.2f} ({global_profit_pct:.2f}%)
+left, right = st.columns([3.4, 1.3])
+
+with left:
+    s1, s2, s3, s4 = st.columns(4)
+
+    with s1:
+        st.markdown(f"""
+        <div class="summary-card">
+            <div class="summary-label">Total Assets</div>
+            <div class="summary-value">${global_total_now:,.2f}</div>
+            <div class="{'summary-positive' if global_profit >= 0 else 'summary-negative'}">
+                {'+' if global_profit >= 0 else ''}${global_profit:,.2f} ({global_profit_pct:.2f}%)
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-with top2:
-    st.markdown(f"""
-    <div class="summary-card">
-        <div class="summary-label">Capital total introdus</div>
-        <div class="summary-value">${global_total_in:,.2f}</div>
-        <div class="summary-label">Investit + cash neinvestit</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with top3:
-    st.markdown(f"""
-    <div class="summary-card">
-        <div class="summary-label">Cash total</div>
-        <div class="summary-value">${total_cash_global:,.2f}</div>
-        <div class="summary-label">Fără profit/pierdere</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with top4:
-    best_text = "N/A" if best_position is None else f"{best_position['ticker']} ({best_position['return_pct']:.2f}%)"
-    st.markdown(f"""
-    <div class="summary-card">
-        <div class="summary-label">Best performer</div>
-        <div class="summary-value" style="font-size:1.25rem;">{best_text}</div>
-        <div class="summary-label">Cea mai bună poziție din toate PIE-urile</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-for result in portfolio_results:
-    st.markdown(f"""
-    <div class="section-box">
-        <div class="section-title">{result['name']}</div>
-        <div class="mini-note">
-            Investit inițial: ${result['invested_total']:.2f} din {result['buy_date']:%d.%m.%Y}
-            {'| Cash neinvestit: $' + format(result['cash_total'], ',.2f') if result['cash_total'] else ''}
+    with s2:
+        st.markdown(f"""
+        <div class="summary-card">
+            <div class="summary-label">Capital introdus</div>
+            <div class="summary-value">${global_total_in:,.2f}</div>
+            <div class="summary-label">Investit + cash</div>
         </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-    target_weight = 100 / len(result["tickers"]) if result["tickers"] else 0
-    cols = st.columns(4)
+    with s3:
+        st.markdown(f"""
+        <div class="summary-card">
+            <div class="summary-label">Cash</div>
+            <div class="summary-value">${total_cash_global:,.2f}</div>
+            <div class="summary-label">Neinvestit</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    for i, position in enumerate(result["positions"]):
-        current_weight = (
-            position["current_value"] / result["total_positions_value"] * 100
-            if result["total_positions_value"] else 0
+    with s4:
+        best_text = "N/A" if best_position is None else f"{best_position['ticker']} {best_position['return_pct']:.2f}%"
+        st.markdown(f"""
+        <div class="summary-card">
+            <div class="summary-label">Best Performer</div>
+            <div class="summary-value" style="font-size:1.18rem;">{best_text}</div>
+            <div class="summary-label">Cea mai bună poziție</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Portfolio Buckets</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">PIE-urile tale tratate ca asset groups</div>', unsafe_allow_html=True)
+
+    for result in portfolio_results:
+        is_pos = result["change_pct"] >= 0
+        pill_class = "pill-pos" if is_pos else "pill-neg"
+        st.markdown(f"""
+        <div class="asset-row">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <div class="asset-name">{result['name']}</div>
+                    <div class="asset-sub">
+                        Investit: ${result['invested_total']:.2f}
+                        {' | Cash: $' + format(result['cash_total'], ',.2f') if result['cash_total'] else ''}
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="asset-name">${result['portfolio_total_now']:,.2f}</div>
+                    <div class="{pill_class}">
+                        {'+' if result['change_pct'] >= 0 else ''}{result['change_pct']:.2f}%
+                    </div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    for result in portfolio_results:
+        st.markdown(f'<div class="glass-card" style="margin-top:16px;">', unsafe_allow_html=True)
+        st.markdown(f'<div class="section-title">{result["name"]}</div>', unsafe_allow_html=True)
+        st.markdown(
+            f'<div class="section-subtitle">Data intrării: {result["buy_date"]:%d.%m.%Y}</div>',
+            unsafe_allow_html=True
         )
-        emoji = "🟢" if position["return_pct"] >= 0 else "🔴"
 
-        with cols[i % 4]:
-            st.metric(
-                label=f"**{position['ticker']}**",
-                value=f"${position['price']:.2f}",
-                delta=f"{emoji} {position['return_pct']:.2f}%"
-            )
-            st.caption(f"Țintă: {target_weight:.2f}% | Acum: {current_weight:.2f}%")
-            st.caption(
-                f"P/L: ${position['profit_loss']:+.2f} | "
-                f"${position['invested']:.2f} → ${position['current_value']:.2f}"
-            )
+        cols = st.columns(4)
+        target_weight = 100 / result["ticker_count"] if result["ticker_count"] else 0
 
-    status_emoji = "🟢" if result["total_change_pct"] >= 0 else "🔴"
-    st.markdown(
-        f"""
-        <div class="info-strip">
-            <b>Total {result['name']}</b>: {status_emoji}
-            {result['total_change_pct']:.2f}% |
-            ${result['portfolio_total_in']:,.2f} → ${result['portfolio_total_now']:,.2f}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        for i, pos in enumerate(result["positions"]):
+            current_weight = (pos["current_value"] / result["total_positions_value"] * 100) if result["total_positions_value"] else 0
+            with cols[i % 4]:
+                st.metric(
+                    label=pos["ticker"],
+                    value=f"${pos['price']:.2f}",
+                    delta=f"{pos['return_pct']:.2f}%"
+                )
+                st.caption(f"Țintă: {target_weight:.2f}% | Acum: {current_weight:.2f}%")
+                st.caption(f"P/L: ${pos['profit_loss']:+.2f}")
 
-    if result["cash_additions"]:
-        st.caption(f"Alimentări cash: {format_cash_additions(result['cash_additions'])}")
+        if result["failed"]:
+            st.warning("Simboluri neîncărcate:")
+            for item in result["failed"]:
+                st.write(f"- {item}")
 
-    if result["failed_tickers"]:
-        st.warning("Nu s-au putut încărca toate simbolurile:")
-        for message in result["failed_tickers"]:
-            st.write(f"- {message}")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
+with right:
+    st.markdown(f'<div class="sidebar-card"><div class="sidebar-title">Allocation</div>', unsafe_allow_html=True)
 
-if total_cash_global > 0:
-    portfolio_totals.append({
-        "Categorie": "💵 Cash",
-        "Valoare": total_cash_global
-    })
+    total_value = sum(x["Valoare"] for x in portfolio_totals)
+    colors = [green, blue, orange, text_soft, red, "#8b5cf6"]
 
-st.sidebar.markdown("## Distribuție totală")
-
-if portfolio_totals:
-    total_value_for_chart = sum(item["Valoare"] for item in portfolio_totals)
-
-    colors = ["#22c55e", "#3b82f6", "#f59e0b", "#94a3b8", "#ef4444", "#06b6d4"]
-
+    current_angle = 0
     segments = []
     legend_html = ""
-    current_angle = 0
 
     for i, item in enumerate(portfolio_totals):
-        value = item["Valoare"]
-        label = item["Categorie"]
         color = colors[i % len(colors)]
-        pct = (value / total_value_for_chart * 100) if total_value_for_chart else 0
+        pct = (item["Valoare"] / total_value * 100) if total_value else 0
         angle = pct * 3.6
-
-        segments.append(
-            f"{color} {current_angle:.2f}deg {current_angle + angle:.2f}deg"
-        )
-
+        segments.append(f"{color} {current_angle:.2f}deg {current_angle + angle:.2f}deg")
         legend_html += f"""
-        <div style="display:flex; align-items:center; margin-bottom:8px;">
-            <div style="width:12px; height:12px; background:{color}; border-radius:3px; margin-right:8px;"></div>
-            <div style="font-size:13px; color:#e5e7eb;">
-                {label}<br>
-                <span style="color:#94a3b8;">${value:,.2f} ({pct:.1f}%)</span>
+        <div class="legend-item">
+            <div class="legend-color" style="background:{color};"></div>
+            <div class="legend-text">
+                {item['Categorie']}<br>
+                <span class="legend-sub">${item['Valoare']:,.2f} ({pct:.1f}%)</span>
             </div>
         </div>
         """
-
         current_angle += angle
 
     donut_style = ", ".join(segments)
 
-    st.sidebar.markdown(
-        f"""
-        <div style="display:flex; justify-content:center; margin: 12px 0 18px 0;">
+    st.markdown(f"""
+    <div style="display:flex; justify-content:center; margin:8px 0 16px 0;">
+        <div style="
+            width:220px;
+            height:220px;
+            border-radius:50%;
+            background: conic-gradient({donut_style});
+            position:relative;
+            box-shadow: 0 18px 34px rgba(0,0,0,0.16);
+        ">
             <div style="
-                width:220px;
-                height:220px;
+                position:absolute;
+                top:50%;
+                left:50%;
+                transform:translate(-50%, -50%);
+                width:112px;
+                height:112px;
                 border-radius:50%;
-                background: conic-gradient({donut_style});
-                position:relative;
-                box-shadow: 0 14px 30px rgba(0,0,0,0.22);
+                background:{donut_center};
+                border:1px solid {border};
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+                justify-content:center;
+                color:{text_main};
+                text-align:center;
             ">
-                <div style="
-                    position:absolute;
-                    top:50%;
-                    left:50%;
-                    transform:translate(-50%, -50%);
-                    width:112px;
-                    height:112px;
-                    background:#0f172a;
-                    border:1px solid rgba(255,255,255,0.08);
-                    border-radius:50%;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    flex-direction:column;
-                    color:white;
-                    text-align:center;
-                    font-size:12px;
-                ">
-                    <div style="color:#94a3b8;">Total</div>
-                    <div style="font-size:16px; font-weight:800;">${total_value_for_chart:,.0f}</div>
-                </div>
+                <div style="color:{text_soft}; font-size:12px;">Total</div>
+                <div style="font-size:17px; font-weight:800;">${total_value:,.0f}</div>
             </div>
         </div>
-        <div class="legend-card">
-            {legend_html}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    </div>
+    {legend_html}
+    """, unsafe_allow_html=True)
 
-st.sidebar.markdown("---")
-if best_position:
-    st.sidebar.markdown(
-        f"""
-        <div class="legend-card">
-            <div style="color:white; font-weight:700; margin-bottom:6px;">Top performer</div>
-            <div style="color:#22c55e; font-size:14px; font-weight:700;">
-                {best_position['ticker']} +{best_position['return_pct']:.2f}%
-            </div>
-            <div style="color:#94a3b8; font-size:12px;">{best_position['portfolio']}</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-if worst_position:
-    st.sidebar.markdown(
-        f"""
-        <div class="legend-card">
-            <div style="color:white; font-weight:700; margin-bottom:6px;">Weakest performer</div>
-            <div style="color:#ef4444; font-size:14px; font-weight:700;">
-                {worst_position['ticker']} {worst_position['return_pct']:.2f}%
-            </div>
-            <div style="color:#94a3b8; font-size:12px;">{worst_position['portfolio']}</div>
+    if best_position:
+        st.markdown(f"""
+        <div class="sidebar-card">
+            <div class="sidebar-title">Top Performer</div>
+            <div style="color:{text_main}; font-size:1.1rem; font-weight:800;">{best_position['ticker']}</div>
+            <div style="color:{green}; font-weight:700; margin-top:4px;">+{best_position['return_pct']:.2f}%</div>
+            <div style="color:{text_soft}; font-size:0.84rem; margin-top:4px;">{best_position['portfolio']}</div>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+        """, unsafe_allow_html=True)
 
-st.markdown(
-    '<div class="footer-note">Date de la Yahoo Finance • Cash-ul suplimentar este tratat separat, fără profit</div>',
-    unsafe_allow_html=True
-)
+    if worst_position:
+        st.markdown(f"""
+        <div class="sidebar-card">
+            <div class="sidebar-title">Weakest Performer</div>
+            <div style="color:{text_main}; font-size:1.1rem; font-weight:800;">{worst_position['ticker']}</div>
+            <div style="color:{red}; font-weight:700; margin-top:4px;">{worst_position['return_pct']:.2f}%</div>
+            <div style="color:{text_soft}; font-size:0.84rem; margin-top:4px;">{worst_position['portfolio']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+st.caption("Date de la Yahoo Finance • Cash-ul suplimentar este tratat separat, fără profit")
