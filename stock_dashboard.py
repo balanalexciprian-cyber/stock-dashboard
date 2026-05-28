@@ -39,11 +39,13 @@ st.markdown(
         .stApp {{
             background: {bg_main};
         }}
+
         .block-container {{
             max-width: 1450px;
             padding-top: 1rem;
             padding-bottom: 2rem;
         }}
+
         .hero {{
             background: {bg_panel};
             border: 1px solid {border};
@@ -52,6 +54,7 @@ st.markdown(
             margin-bottom: 18px;
             box-shadow: 0 20px 44px rgba(0,0,0,0.12);
         }}
+
         .hero-kicker {{
             color: {blue};
             font-size: 0.85rem;
@@ -59,6 +62,7 @@ st.markdown(
             text-transform: uppercase;
             margin-bottom: 8px;
         }}
+
         .hero-title {{
             color: {text_main};
             font-size: 2.4rem;
@@ -66,11 +70,13 @@ st.markdown(
             line-height: 1.05;
             margin-bottom: 8px;
         }}
+
         .hero-subtitle {{
             color: {text_soft};
             font-size: 0.98rem;
             max-width: 780px;
         }}
+
         .glass-card {{
             background: {bg_panel};
             border: 1px solid {border};
@@ -78,6 +84,7 @@ st.markdown(
             padding: 18px;
             box-shadow: 0 16px 32px rgba(0,0,0,0.10);
         }}
+
         .summary-card {{
             background: {bg_card};
             border: 1px solid {border};
@@ -85,40 +92,47 @@ st.markdown(
             padding: 18px;
             min-height: 118px;
         }}
+
         .summary-label {{
             color: {text_soft};
             font-size: 0.84rem;
             margin-bottom: 10px;
         }}
+
         .summary-value {{
             color: {text_main};
             font-size: 1.7rem;
             font-weight: 800;
             line-height: 1.05;
         }}
+
         .summary-positive {{
             color: {green};
             margin-top: 8px;
             font-size: 0.92rem;
             font-weight: 700;
         }}
+
         .summary-negative {{
             color: {red};
             margin-top: 8px;
             font-size: 0.92rem;
             font-weight: 700;
         }}
+
         .section-title {{
             color: {text_main};
             font-size: 1.15rem;
             font-weight: 780;
             margin-bottom: 6px;
         }}
+
         .section-subtitle {{
             color: {text_soft};
             font-size: 0.9rem;
             margin-bottom: 14px;
         }}
+
         .asset-row {{
             background: {bg_card};
             border: 1px solid {border};
@@ -126,16 +140,19 @@ st.markdown(
             padding: 14px 16px;
             margin-bottom: 10px;
         }}
+
         .asset-name {{
             color: {text_main};
             font-size: 1rem;
             font-weight: 700;
         }}
+
         .asset-sub {{
             color: {text_soft};
             font-size: 0.82rem;
             margin-top: 2px;
         }}
+
         .pill-pos {{
             display: inline-block;
             background: {green_bg};
@@ -146,6 +163,7 @@ st.markdown(
             font-size: 0.78rem;
             font-weight: 700;
         }}
+
         .pill-neg {{
             display: inline-block;
             background: rgba(239,68,68,0.10);
@@ -156,6 +174,7 @@ st.markdown(
             font-size: 0.78rem;
             font-weight: 700;
         }}
+
         .sidebar-card {{
             background: {bg_panel};
             border: 1px solid {border};
@@ -163,17 +182,20 @@ st.markdown(
             padding: 16px;
             margin-bottom: 14px;
         }}
+
         .sidebar-title {{
             color: {text_main};
             font-size: 1rem;
             font-weight: 760;
             margin-bottom: 10px;
         }}
+
         .legend-item {{
             display: flex;
             align-items: center;
             margin-bottom: 8px;
         }}
+
         .legend-color {{
             width: 12px;
             height: 12px;
@@ -181,15 +203,18 @@ st.markdown(
             margin-right: 8px;
             flex-shrink: 0;
         }}
+
         .legend-text {{
             color: {text_main};
             font-size: 13px;
             line-height: 1.3;
         }}
+
         .legend-sub {{
             color: {text_soft};
             font-size: 12px;
         }}
+
         .notice-box {{
             background: {bg_card};
             border: 1px dashed {border};
@@ -198,19 +223,23 @@ st.markdown(
             color: {text_soft};
             font-size: 0.92rem;
         }}
+
         div[data-testid="stMetric"] {{
             background: {bg_card};
             border: 1px solid {border};
             border-radius: 18px;
             padding: 14px;
         }}
+
         div[data-testid="stMetricLabel"] {{
             color: {text_soft};
         }}
+
         div[data-testid="stMetricValue"] {{
             color: {text_main};
             font-weight: 800;
         }}
+
         div[data-testid="stMetricDelta"] {{
             font-weight: 700;
         }}
@@ -235,7 +264,7 @@ PORTFOLIOS = [
         "invested_now": 480.84,
         "cash_now": 141.98,
         "total_now": 622.82,
-        "note": "PIE OT folosește valorile reale din aplicație. Când cash-ul va fi investit, actualizezi manual aceste 3 valori.",
+        "note": "PIE OT folosește valorile reale din aplicație. Când cash-ul va fi investit, actualizezi manual aceste valori.",
     },
     {
         "name": "📈 Alex PIE 20",
@@ -356,6 +385,7 @@ for portfolio in PORTFOLIOS:
     portfolio_results.append({
         "name": portfolio["name"],
         "mode": "calculated",
+        "tickers": portfolio["tickers"],
         "buy_date": portfolio["buy_date"],
         "positions": positions,
         "failed": failed,
@@ -475,58 +505,52 @@ with left:
     st.markdown("</div>", unsafe_allow_html=True)
 
     for result in portfolio_results:
-        st.markdown('<div class="glass-card" style="margin-top:16px;">', unsafe_allow_html=True)
-        st.markdown(f'<div class="section-title">{result["name"]}</div>', unsafe_allow_html=True)
-
-        if result["mode"] == "manual_total":
-            st.markdown(
-                f"""
-                <div class="section-subtitle">
-                    Valori manuale reale din aplicație.
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                f"""
-                <div class="notice-box">
-                    <b>Valoare investită:</b> ${result['invested_total']:.2f}<br>
-                    <b>Cash:</b> ${result['cash_total']:.2f}<br>
-                    <b>Valoare totală:</b> ${result['portfolio_total_now']:.2f}<br><br>
-                    {result['note']}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-            st.markdown("</div>", unsafe_allow_html=True)
-            continue
-
-        st.markdown(
-            f'<div class="section-subtitle">Data intrării: {result["buy_date"]:%d.%m.%Y}</div>',
-            unsafe_allow_html=True,
-        )
-
-        cols = st.columns(4)
-        target_weight = 100 / result["ticker_count"] if result["ticker_count"] else 0
-
-        for i, pos in enumerate(result["positions"]):
-            current_weight = (pos["current_value"] / result["total_positions_value"] * 100) if result["total_positions_value"] else 0
-            with cols[i % 4]:
-                st.metric(
-                    label=pos["ticker"],
-                    value=f"${pos['price']:.2f}",
-                    delta=f"{pos['return_pct']:.2f}%"
+        with st.expander(
+            f"{result['name']} • ${result['portfolio_total_now']:,.2f} • {result['change_pct']:+.2f}%",
+            expanded=False
+        ):
+            if result["mode"] == "manual_total":
+                st.markdown(
+                    f"""
+                    <div class="notice-box">
+                        <b>Valoare investită:</b> ${result['invested_total']:.2f}<br>
+                        <b>Cash:</b> ${result['cash_total']:.2f}<br>
+                        <b>Valoare totală:</b> ${result['portfolio_total_now']:.2f}<br><br>
+                        {result['note']}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
                 )
-                st.caption(f"Țintă: {target_weight:.2f}% | Acum: {current_weight:.2f}%")
-                st.caption(f"Valoare poziție: ${pos['current_value']:.2f}")
-                st.caption(f"P/L: ${pos['profit_loss']:+.2f}")
 
-        if result["failed"]:
-            st.warning("Simboluri neîncărcate:")
-            for item in result["failed"]:
-                st.write(f"- {item}")
+                st.markdown("**Stockurile din PIE OT:**")
+                st.write(", ".join(result["tickers"]))
+                continue
 
-        st.markdown("</div>", unsafe_allow_html=True)
+            st.caption(f"Data intrării: {result['buy_date']:%d.%m.%Y}")
+
+            cols = st.columns(4)
+            target_weight = 100 / result["ticker_count"] if result["ticker_count"] else 0
+
+            for i, pos in enumerate(result["positions"]):
+                current_weight = (
+                    pos["current_value"] / result["total_positions_value"] * 100
+                    if result["total_positions_value"] else 0
+                )
+
+                with cols[i % 4]:
+                    st.metric(
+                        label=pos["ticker"],
+                        value=f"${pos['price']:.2f}",
+                        delta=f"{pos['return_pct']:.2f}%"
+                    )
+                    st.caption(f"Țintă: {target_weight:.2f}% | Acum: {current_weight:.2f}%")
+                    st.caption(f"Valoare poziție: ${pos['current_value']:.2f}")
+                    st.caption(f"P/L: ${pos['profit_loss']:+.2f}")
+
+            if result["failed"]:
+                st.warning("Simboluri neîncărcate:")
+                for item in result["failed"]:
+                    st.write(f"- {item}")
 
 with right:
     st.markdown('<div class="sidebar-card"><div class="sidebar-title">Allocation</div>', unsafe_allow_html=True)
