@@ -243,6 +243,39 @@ st.markdown(
             margin-bottom: 8px;
         }}
 
+        .crypto-card {{
+            background: {bg_card};
+            border: 1px solid {border};
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 10px;
+        }}
+
+        .crypto-symbol {{
+            color: {text_main};
+            font-size: 1rem;
+            font-weight: 800;
+        }}
+
+        .crypto-name {{
+            color: {text_soft};
+            font-size: 0.82rem;
+            margin-top: 2px;
+        }}
+
+        .crypto-amount {{
+            color: {text_main};
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-align: right;
+        }}
+
+        .crypto-value {{
+            color: {text_soft};
+            font-size: 0.85rem;
+            text-align: right;
+        }}
+
         div[data-testid="stMetric"] {{
             background: {bg_card};
             border: 1px solid {border};
@@ -285,19 +318,21 @@ PORTFOLIOS = [
         "name": "🤖 AI TECH",
         "mode": "calculated",
         "tickers": ["AMAT", "MU", "MSTR", "AMD", "MRVL", "ASML", "TSM", "SNPS", "SNDK", "NTNX", "INTC", "AVGO", "CDNS", "ON"],
-        "buy_date": date(2026, 5, 26),  # de alaltăieri = 26.05.2026
+        "buy_date": date(2026, 5, 26),
         "amount_per_stock": 78.44,
         "cash_additions": [],
     },
     {
         "name": "💰 PIE OT Investimental",
-        "mode": "manual_total",
+        "mode": "manual_with_positions",
         "tickers": ["LIN", "XOM", "PLD", "NEE", "MSFT", "AMZN", "WMT", "META", "JPM", "LLY"],
-        "invested_cost_basis": 373.30,  # capitalul efectiv băgat în acțiuni
-        "invested_now": 480.84,         # cât valorează acum partea investită
-        "cash_now": 141.98,             # cash separat
+        "buy_date": date(2024, 7, 22),
+        "amount_per_stock": 37.33,
+        "invested_cost_basis": 373.30,
+        "invested_now": 480.84,
+        "cash_now": 141.98,
         "total_now": 622.82,
-        "note": "PIE OT folosește valori manuale reale. Randamentul este calculat doar pe partea investită, iar cash-ul rămâne separat.",
+        "note": "PIE OT folosește valori manuale reale pentru totaluri. Randamentul pe tickere este calculat pe partea investită inițial, iar cash-ul rămâne separat.",
     },
     {
         "name": "📈 Alex PIE 20",
@@ -306,6 +341,24 @@ PORTFOLIOS = [
         "buy_date": date(2026, 5, 19),
         "amount_per_stock": 54.91,
         "cash_additions": [],
+    },
+    {
+        "name": "🪙 Crypto Spot",
+        "mode": "crypto_manual",
+        "total_now": 111.90,
+        "today_pnl": -1.57,
+        "today_pnl_pct": -1.38,
+        "positions": [
+            {"symbol": "BNB", "name": "Build and Build", "amount": "0.0767989", "value": 48.53},
+            {"symbol": "BTC", "name": "Bitcoin", "amount": "0.00054", "value": 39.61},
+            {"symbol": "XLM", "name": "Stellar Lumens", "amount": "134.00", "value": 23.65},
+            {"symbol": "USD", "name": "USD", "amount": "0.085396", "value": 0.09},
+            {"symbol": "USDC", "name": "USDC", "amount": "0.01422042", "value": 0.01},
+            {"symbol": "EGLD", "name": "MultiversX", "amount": "0.0024066", "value": 0.01},
+            {"symbol": "EDG", "name": "Edgeware", "amount": "218.69791733", "value": 0.00},
+            {"symbol": "ETHW", "name": "Ethereum PoW", "amount": "0.00008495", "value": 0.00},
+        ],
+        "note": "Pentru crypto afișăm valoarea curentă și Today's PnL din exchange. Cost basis complet nu este disponibil aici, deci totalul este tratat la valoarea actuală.",
     },
 ]
 
@@ -351,7 +404,25 @@ best_position = None
 worst_position = None
 
 for portfolio in PORTFOLIOS:
-    if portfolio["mode"] == "manual_total":
+    if portfolio["mode"] == "crypto_manual":
+        portfolio_results.append({
+            "name": portfolio["name"],
+            "mode": "crypto_manual",
+            "portfolio_total_now": portfolio["total_now"],
+            "portfolio_total_in": portfolio["total_now"],
+            "today_pnl": portfolio["today_pnl"],
+            "today_pnl_pct": portfolio["today_pnl_pct"],
+            "positions": portfolio["positions"],
+            "note": portfolio["note"],
+            "cash_total": 0.0,
+        })
+
+        portfolio_totals.append({"Categorie": portfolio["name"], "Valoare": portfolio["total_now"]})
+        global_total_now += portfolio["total_now"]
+        global_total_in += portfolio["total_now"]
+        continue
+
+    if portfolio["mode"] == "manual_with_positions":
         invested_cost_basis = portfolio["invested_cost_basis"]
         invested_now = portfolio["invested_now"]
         cash_total = portfolio["cash_now"]
@@ -362,10 +433,43 @@ for portfolio in PORTFOLIOS:
         invested_change_pct = (invested_profit / invested_cost_basis * 100) if invested_cost_basis else 0
         total_change_pct = ((portfolio_total_now - portfolio_total_in) / portfolio_total_in * 100) if portfolio_total_in else 0
 
+        positions = []
+        failed = []
+        total_positions_value = 0.0
+
+        for ticker in portfolio["tickers"]:
+            data, error = get_ticker_data(ticker, portfolio["buy_date"])
+            if error:
+                failed.append(f"{ticker}: {error}")
+                continue
+
+            current_value = portfolio["amount_per_stock"] * (data["price"] / data["buy_price"])
+            profit_loss = current_value - portfolio["amount_per_stock"]
+            return_pct = (profit_loss / portfolio["amount_per_stock"] * 100) if portfolio["amount_per_stock"] else 0
+
+            position = {
+                "ticker": ticker,
+                "price": data["price"],
+                "invested": portfolio["amount_per_stock"],
+                "current_value": current_value,
+                "profit_loss": profit_loss,
+                "return_pct": return_pct,
+                "portfolio": portfolio["name"],
+            }
+            positions.append(position)
+            total_positions_value += current_value
+
+            if best_position is None or return_pct > best_position["return_pct"]:
+                best_position = position
+            if worst_position is None or return_pct < worst_position["return_pct"]:
+                worst_position = position
+
         portfolio_results.append({
             "name": portfolio["name"],
-            "mode": "manual_total",
+            "mode": "manual_with_positions",
             "tickers": portfolio["tickers"],
+            "buy_date": portfolio["buy_date"],
+            "amount_per_stock": portfolio["amount_per_stock"],
             "invested_cost_basis": invested_cost_basis,
             "invested_now": invested_now,
             "cash_total": cash_total,
@@ -374,8 +478,10 @@ for portfolio in PORTFOLIOS:
             "invested_change_pct": invested_change_pct,
             "total_change_pct": total_change_pct,
             "note": portfolio["note"],
-            "positions": [],
-            "failed": [],
+            "positions": positions,
+            "failed": failed,
+            "total_positions_value": total_positions_value,
+            "ticker_count": len(portfolio["tickers"]),
         })
 
         portfolio_totals.append({"Categorie": portfolio["name"], "Valoare": portfolio_total_now})
@@ -398,7 +504,7 @@ for portfolio in PORTFOLIOS:
 
         current_value = portfolio["amount_per_stock"] * (data["price"] / data["buy_price"])
         profit_loss = current_value - portfolio["amount_per_stock"]
-        return_pct = (profit_loss / portfolio["amount_per_stock"]) * 100 if portfolio["amount_per_stock"] else 0
+        return_pct = (profit_loss / portfolio["amount_per_stock"] * 100) if portfolio["amount_per_stock"] else 0
 
         position = {
             "ticker": ticker,
@@ -451,7 +557,7 @@ st.markdown(
         <div class="hero-kicker">Dashboard</div>
         <div class="hero-title">My Assets</div>
         <div class="hero-subtitle">
-            O vedere mai curată asupra portofoliului tău: valoare totală, cash, alocare pe PIE-uri și performanță pe fiecare poziție.
+            O vedere mai curată asupra portofoliului tău: valoare totală, cash, alocare pe PIE-uri, crypto și performanță pe fiecare poziție.
         </div>
     </div>
     """,
@@ -483,7 +589,7 @@ with left:
             <div class="summary-card">
                 <div class="summary-label">Capital introdus</div>
                 <div class="summary-value">${global_total_in:,.2f}</div>
-                <div class="summary-label">Investit + cash</div>
+                <div class="summary-label">Investit + cash + crypto spot</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -519,11 +625,16 @@ with left:
     st.markdown('<div class="section-subtitle">PIE-urile tale tratate ca asset groups</div>', unsafe_allow_html=True)
 
     for result in portfolio_results:
-        if result["mode"] == "manual_total":
+        if result["mode"] == "manual_with_positions":
             row_pct = result["invested_change_pct"]
             row_label = f"Invested {row_pct:+.2f}%"
             cash_line = f" | Cash: ${result['cash_total']:,.2f}"
             invested_line = f"Invested now: ${result['invested_now']:,.2f}"
+        elif result["mode"] == "crypto_manual":
+            row_pct = result["today_pnl_pct"]
+            row_label = f"Today {row_pct:+.2f}%"
+            cash_line = ""
+            invested_line = f"Spot value: ${result['portfolio_total_now']:,.2f}"
         else:
             row_pct = result["change_pct"]
             row_label = f"{row_pct:+.2f}%"
@@ -553,8 +664,10 @@ with left:
     st.markdown("</div>", unsafe_allow_html=True)
 
     for result in portfolio_results:
-        if result["mode"] == "manual_total":
+        if result["mode"] == "manual_with_positions":
             expander_suffix = f"Invested {result['invested_change_pct']:+.2f}%"
+        elif result["mode"] == "crypto_manual":
+            expander_suffix = f"Today {result['today_pnl_pct']:+.2f}%"
         else:
             expander_suffix = f"{result['change_pct']:+.2f}%"
 
@@ -562,7 +675,42 @@ with left:
             f"{result['name']} • ${result['portfolio_total_now']:,.2f} • {expander_suffix}",
             expanded=False
         ):
-            if result["mode"] == "manual_total":
+            if result["mode"] == "crypto_manual":
+                st.markdown(
+                    f"""
+                    <div class="notice-box">
+                        <b>Est. Total Value:</b> ${result['portfolio_total_now']:.2f}<br>
+                        <b>Today's PnL:</b> ${result['today_pnl']:+.2f} ({result['today_pnl_pct']:+.2f}%)<br><br>
+                        {result['note']}
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+                for i in range(0, len(result["positions"]), 2):
+                    cols = st.columns(2)
+                    for j, coin in enumerate(result["positions"][i:i + 2]):
+                        with cols[j]:
+                            st.markdown(
+                                f"""
+                                <div class="crypto-card">
+                                    <div style="display:flex; justify-content:space-between; gap:12px;">
+                                        <div>
+                                            <div class="crypto-symbol">{coin['symbol']}</div>
+                                            <div class="crypto-name">{coin['name']}</div>
+                                        </div>
+                                        <div>
+                                            <div class="crypto-amount">{coin['amount']}</div>
+                                            <div class="crypto-value">${coin['value']:.2f}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
+                continue
+
+            if result["mode"] == "manual_with_positions":
                 st.markdown(
                     f"""
                     <div class="notice-box">
@@ -577,14 +725,30 @@ with left:
                     unsafe_allow_html=True,
                 )
 
-                st.markdown("**Stockurile din PIE OT:**")
-                chip_cols = st.columns(5)
-                for i, ticker in enumerate(result["tickers"]):
-                    with chip_cols[i % 5]:
-                        st.markdown(
-                            f'<div class="ticker-chip">{ticker}</div>',
-                            unsafe_allow_html=True,
+                st.caption(f"Data intrării: {result['buy_date']:%d.%m.%Y}")
+
+                cols = st.columns(4)
+                target_weight = 100 / result["ticker_count"] if result["ticker_count"] else 0
+
+                for i, pos in enumerate(result["positions"]):
+                    current_weight = (
+                        pos["current_value"] / result["total_positions_value"] * 100
+                        if result["total_positions_value"] else 0
+                    )
+                    with cols[i % 4]:
+                        st.metric(
+                            label=pos["ticker"],
+                            value=f"${pos['price']:.2f}",
+                            delta=f"{pos['return_pct']:.2f}%"
                         )
+                        st.caption(f"Țintă: {target_weight:.2f}% | Acum: {current_weight:.2f}%")
+                        st.caption(f"Valoare poziție: ${pos['current_value']:.2f}")
+                        st.caption(f"P/L: ${pos['profit_loss']:+.2f}")
+
+                if result["failed"]:
+                    st.warning("Simboluri neîncărcate:")
+                    for item in result["failed"]:
+                        st.write(f"- {item}")
                 continue
 
             st.caption(f"Data intrării: {result['buy_date']:%d.%m.%Y}")
@@ -616,7 +780,7 @@ with right:
     st.markdown('<div class="sidebar-card"><div class="sidebar-title">Allocation</div>', unsafe_allow_html=True)
 
     total_value = sum(x["Valoare"] for x in portfolio_totals)
-    colors = [green, blue, orange, "#94a3b8", red, "#8b5cf6"]
+    colors = [green, blue, orange, "#94a3b8", red, "#8b5cf6", "#06b6d4"]
 
     current_angle = 0
     segments = []
@@ -705,4 +869,4 @@ with right:
             unsafe_allow_html=True,
         )
 
-st.caption("Date de la Yahoo Finance • Tema implicită este Light • AI TECH este calculat de la 26.05.2026 • PIE OT separă investiția de cash")
+st.caption("Date de la Yahoo Finance • Tema implicită este Light • AI TECH este calculat de la 26.05.2026 • PIE OT separă investiția de cash • Crypto folosește valorile manuale din exchange")
