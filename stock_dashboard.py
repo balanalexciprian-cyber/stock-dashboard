@@ -4,13 +4,14 @@ from datetime import date
 
 st.set_page_config(page_title="Portfolio Tracker", layout="wide", page_icon="📈")
 
-theme_mode = st.sidebar.selectbox("Temă", ["Dark", "Light"])
+theme_mode = st.sidebar.selectbox("Temă", ["Light", "Dark"], index=0)
 
 if theme_mode == "Dark":
     bg_main = "#071226"
     bg_panel = "#121c34"
     bg_card = "#1a233b"
-    border = "rgba(255,255,255,0.06)"
+    bg_subtle = "#101a30"
+    border = "rgba(255,255,255,0.08)"
     text_main = "#f8fafc"
     text_soft = "#94a3b8"
     green = "#4ade80"
@@ -19,10 +20,12 @@ if theme_mode == "Dark":
     orange = "#f59e0b"
     red = "#f87171"
     donut_center = "#0d172d"
+    shadow = "0 18px 40px rgba(0,0,0,0.18)"
 else:
-    bg_main = "#f3f7fb"
+    bg_main = "#f4f7fb"
     bg_panel = "#ffffff"
     bg_card = "#ffffff"
+    bg_subtle = "#eef3f9"
     border = "rgba(15,23,42,0.08)"
     text_main = "#0f172a"
     text_soft = "#64748b"
@@ -32,6 +35,7 @@ else:
     orange = "#d97706"
     red = "#dc2626"
     donut_center = "#ffffff"
+    shadow = "0 16px 34px rgba(15,23,42,0.08)"
 
 st.markdown(
     f"""
@@ -47,20 +51,21 @@ st.markdown(
         }}
 
         .hero {{
-            background: {bg_panel};
+            background: linear-gradient(135deg, {bg_panel} 0%, {bg_subtle} 100%);
             border: 1px solid {border};
             border-radius: 26px;
-            padding: 26px;
+            padding: 28px;
             margin-bottom: 18px;
-            box-shadow: 0 20px 44px rgba(0,0,0,0.12);
+            box-shadow: {shadow};
         }}
 
         .hero-kicker {{
             color: {blue};
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             letter-spacing: 0.08em;
             text-transform: uppercase;
             margin-bottom: 8px;
+            font-weight: 700;
         }}
 
         .hero-title {{
@@ -77,20 +82,13 @@ st.markdown(
             max-width: 780px;
         }}
 
-        .glass-card {{
-            background: {bg_panel};
-            border: 1px solid {border};
-            border-radius: 22px;
-            padding: 18px;
-            box-shadow: 0 16px 32px rgba(0,0,0,0.10);
-        }}
-
         .summary-card {{
             background: {bg_card};
             border: 1px solid {border};
-            border-radius: 20px;
+            border-radius: 22px;
             padding: 18px;
             min-height: 118px;
+            box-shadow: {shadow};
         }}
 
         .summary-label {{
@@ -101,7 +99,7 @@ st.markdown(
 
         .summary-value {{
             color: {text_main};
-            font-size: 1.7rem;
+            font-size: 1.75rem;
             font-weight: 800;
             line-height: 1.05;
         }}
@@ -118,6 +116,14 @@ st.markdown(
             margin-top: 8px;
             font-size: 0.92rem;
             font-weight: 700;
+        }}
+
+        .glass-card {{
+            background: {bg_panel};
+            border: 1px solid {border};
+            border-radius: 22px;
+            padding: 18px;
+            box-shadow: {shadow};
         }}
 
         .section-title {{
@@ -157,7 +163,7 @@ st.markdown(
             display: inline-block;
             background: {green_bg};
             color: {green};
-            border: 1px solid rgba(34,197,94,0.24);
+            border: 1px solid rgba(34,197,94,0.22);
             border-radius: 999px;
             padding: 4px 10px;
             font-size: 0.78rem;
@@ -168,7 +174,7 @@ st.markdown(
             display: inline-block;
             background: rgba(239,68,68,0.10);
             color: {red};
-            border: 1px solid rgba(239,68,68,0.22);
+            border: 1px solid rgba(239,68,68,0.20);
             border-radius: 999px;
             padding: 4px 10px;
             font-size: 0.78rem;
@@ -181,6 +187,7 @@ st.markdown(
             border-radius: 22px;
             padding: 16px;
             margin-bottom: 14px;
+            box-shadow: {shadow};
         }}
 
         .sidebar-title {{
@@ -193,7 +200,7 @@ st.markdown(
         .legend-item {{
             display: flex;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }}
 
         .legend-color {{
@@ -216,12 +223,24 @@ st.markdown(
         }}
 
         .notice-box {{
-            background: {bg_card};
-            border: 1px dashed {border};
+            background: {bg_subtle};
+            border: 1px solid {border};
             border-radius: 18px;
             padding: 16px;
-            color: {text_soft};
-            font-size: 0.92rem;
+            color: {text_main};
+            font-size: 0.94rem;
+            line-height: 1.7;
+        }}
+
+        .ticker-chip {{
+            background: {bg_subtle};
+            border: 1px solid {border};
+            border-radius: 12px;
+            padding: 8px 10px;
+            text-align: center;
+            font-weight: 700;
+            color: {text_main};
+            margin-bottom: 8px;
         }}
 
         div[data-testid="stMetric"] {{
@@ -229,6 +248,7 @@ st.markdown(
             border: 1px solid {border};
             border-radius: 18px;
             padding: 14px;
+            box-shadow: none;
         }}
 
         div[data-testid="stMetricLabel"] {{
@@ -242,6 +262,18 @@ st.markdown(
 
         div[data-testid="stMetricDelta"] {{
             font-weight: 700;
+        }}
+
+        details {{
+            background: {bg_panel};
+            border: 1px solid {border};
+            border-radius: 16px;
+            margin-bottom: 12px;
+            box-shadow: {shadow};
+        }}
+
+        details summary {{
+            color: {text_main};
         }}
     </style>
     """,
@@ -407,7 +439,7 @@ global_profit = global_total_now - global_total_in
 global_profit_pct = (global_profit / global_total_in * 100) if global_total_in else 0
 
 st.markdown(
-    f"""
+    """
     <div class="hero">
         <div class="hero-kicker">Dashboard</div>
         <div class="hero-title">My Assets</div>
@@ -468,7 +500,7 @@ with left:
             f"""
             <div class="summary-card">
                 <div class="summary-label">Best Performer</div>
-                <div class="summary-value" style="font-size:1.18rem;">{best_text}</div>
+                <div class="summary-value" style="font-size:1.16rem;">{best_text}</div>
                 <div class="summary-label">Cea mai bună poziție calculată</div>
             </div>
             """,
@@ -505,8 +537,9 @@ with left:
     st.markdown("</div>", unsafe_allow_html=True)
 
     for result in portfolio_results:
+        expander_suffix = "Manual" if result["mode"] == "manual_total" else f"{result['change_pct']:+.2f}%"
         with st.expander(
-            f"{result['name']} • ${result['portfolio_total_now']:,.2f} • {result['change_pct']:+.2f}%",
+            f"{result['name']} • ${result['portfolio_total_now']:,.2f} • {expander_suffix}",
             expanded=False
         ):
             if result["mode"] == "manual_total":
@@ -523,7 +556,13 @@ with left:
                 )
 
                 st.markdown("**Stockurile din PIE OT:**")
-                st.write(", ".join(result["tickers"]))
+                chip_cols = st.columns(5)
+                for i, ticker in enumerate(result["tickers"]):
+                    with chip_cols[i % 5]:
+                        st.markdown(
+                            f'<div class="ticker-chip">{ticker}</div>',
+                            unsafe_allow_html=True,
+                        )
                 continue
 
             st.caption(f"Data intrării: {result['buy_date']:%d.%m.%Y}")
@@ -536,7 +575,6 @@ with left:
                     pos["current_value"] / result["total_positions_value"] * 100
                     if result["total_positions_value"] else 0
                 )
-
                 with cols[i % 4]:
                     st.metric(
                         label=pos["ticker"],
@@ -556,7 +594,7 @@ with right:
     st.markdown('<div class="sidebar-card"><div class="sidebar-title">Allocation</div>', unsafe_allow_html=True)
 
     total_value = sum(x["Valoare"] for x in portfolio_totals)
-    colors = [green, blue, orange, text_soft, red, "#8b5cf6"]
+    colors = [green, blue, orange, "#94a3b8", red, "#8b5cf6"]
 
     current_angle = 0
     segments = []
@@ -589,7 +627,7 @@ with right:
                 border-radius:50%;
                 background: conic-gradient({donut_style});
                 position:relative;
-                box-shadow: 0 18px 34px rgba(0,0,0,0.16);
+                box-shadow:{shadow};
             ">
                 <div style="
                     position:absolute;
@@ -645,4 +683,4 @@ with right:
             unsafe_allow_html=True,
         )
 
-st.caption("Date de la Yahoo Finance • PIE OT folosește momentan valorile reale manuale • Cash-ul suplimentar este tratat separat")
+st.caption("Date de la Yahoo Finance • Tema implicită este Light • PIE OT folosește momentan valorile reale manuale")
