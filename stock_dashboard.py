@@ -39,13 +39,11 @@ st.markdown(
         .stApp {{
             background: {bg_main};
         }}
-
         .block-container {{
             max-width: 1450px;
             padding-top: 1rem;
             padding-bottom: 2rem;
         }}
-
         .hero {{
             background: {bg_panel};
             border: 1px solid {border};
@@ -54,7 +52,6 @@ st.markdown(
             margin-bottom: 18px;
             box-shadow: 0 20px 44px rgba(0,0,0,0.12);
         }}
-
         .hero-kicker {{
             color: {blue};
             font-size: 0.85rem;
@@ -62,7 +59,6 @@ st.markdown(
             text-transform: uppercase;
             margin-bottom: 8px;
         }}
-
         .hero-title {{
             color: {text_main};
             font-size: 2.4rem;
@@ -70,13 +66,11 @@ st.markdown(
             line-height: 1.05;
             margin-bottom: 8px;
         }}
-
         .hero-subtitle {{
             color: {text_soft};
             font-size: 0.98rem;
             max-width: 780px;
         }}
-
         .glass-card {{
             background: {bg_panel};
             border: 1px solid {border};
@@ -84,7 +78,6 @@ st.markdown(
             padding: 18px;
             box-shadow: 0 16px 32px rgba(0,0,0,0.10);
         }}
-
         .summary-card {{
             background: {bg_card};
             border: 1px solid {border};
@@ -92,47 +85,40 @@ st.markdown(
             padding: 18px;
             min-height: 118px;
         }}
-
         .summary-label {{
             color: {text_soft};
             font-size: 0.84rem;
             margin-bottom: 10px;
         }}
-
         .summary-value {{
             color: {text_main};
             font-size: 1.7rem;
             font-weight: 800;
             line-height: 1.05;
         }}
-
         .summary-positive {{
             color: {green};
             margin-top: 8px;
             font-size: 0.92rem;
             font-weight: 700;
         }}
-
         .summary-negative {{
             color: {red};
             margin-top: 8px;
             font-size: 0.92rem;
             font-weight: 700;
         }}
-
         .section-title {{
             color: {text_main};
             font-size: 1.15rem;
             font-weight: 780;
             margin-bottom: 6px;
         }}
-
         .section-subtitle {{
             color: {text_soft};
             font-size: 0.9rem;
             margin-bottom: 14px;
         }}
-
         .asset-row {{
             background: {bg_card};
             border: 1px solid {border};
@@ -140,19 +126,16 @@ st.markdown(
             padding: 14px 16px;
             margin-bottom: 10px;
         }}
-
         .asset-name {{
             color: {text_main};
             font-size: 1rem;
             font-weight: 700;
         }}
-
         .asset-sub {{
             color: {text_soft};
             font-size: 0.82rem;
             margin-top: 2px;
         }}
-
         .pill-pos {{
             display: inline-block;
             background: {green_bg};
@@ -163,7 +146,6 @@ st.markdown(
             font-size: 0.78rem;
             font-weight: 700;
         }}
-
         .pill-neg {{
             display: inline-block;
             background: rgba(239,68,68,0.10);
@@ -174,7 +156,6 @@ st.markdown(
             font-size: 0.78rem;
             font-weight: 700;
         }}
-
         .sidebar-card {{
             background: {bg_panel};
             border: 1px solid {border};
@@ -182,20 +163,17 @@ st.markdown(
             padding: 16px;
             margin-bottom: 14px;
         }}
-
         .sidebar-title {{
             color: {text_main};
             font-size: 1rem;
             font-weight: 760;
             margin-bottom: 10px;
         }}
-
         .legend-item {{
             display: flex;
             align-items: center;
             margin-bottom: 8px;
         }}
-
         .legend-color {{
             width: 12px;
             height: 12px;
@@ -203,34 +181,36 @@ st.markdown(
             margin-right: 8px;
             flex-shrink: 0;
         }}
-
         .legend-text {{
             color: {text_main};
             font-size: 13px;
             line-height: 1.3;
         }}
-
         .legend-sub {{
             color: {text_soft};
             font-size: 12px;
         }}
-
+        .notice-box {{
+            background: {bg_card};
+            border: 1px dashed {border};
+            border-radius: 18px;
+            padding: 16px;
+            color: {text_soft};
+            font-size: 0.92rem;
+        }}
         div[data-testid="stMetric"] {{
             background: {bg_card};
             border: 1px solid {border};
             border-radius: 18px;
             padding: 14px;
         }}
-
         div[data-testid="stMetricLabel"] {{
             color: {text_soft};
         }}
-
         div[data-testid="stMetricValue"] {{
             color: {text_main};
             font-weight: 800;
         }}
-
         div[data-testid="stMetricDelta"] {{
             font-weight: 700;
         }}
@@ -242,6 +222,7 @@ st.markdown(
 PORTFOLIOS = [
     {
         "name": "🤖 AI TECH",
+        "mode": "calculated",
         "tickers": ["AMAT", "MU", "MSTR", "AMD", "MRVL", "ASML", "TSM", "SNPS", "SNDK", "NTNX", "INTC", "AVGO", "CDNS", "ON"],
         "buy_date": date(2026, 5, 27),
         "amount_per_stock": 78.44,
@@ -249,16 +230,16 @@ PORTFOLIOS = [
     },
     {
         "name": "💰 PIE OT Investimental",
+        "mode": "manual_total",
         "tickers": ["LIN", "XOM", "PLD", "NEE", "MSFT", "AMZN", "WMT", "META", "JPM", "LLY"],
-        "buy_date": date(2024, 7, 22),
-        "amount_per_stock": 37.33,
-        "cash_additions": [
-            {"date": date(2026, 4, 28), "amount": 74.70},
-            {"date": date(2026, 5, 22), "amount": 59.83},
-        ],
+        "invested_now": 480.84,
+        "cash_now": 141.98,
+        "total_now": 622.82,
+        "note": "PIE OT folosește valorile reale din aplicație. Când cash-ul va fi investit, actualizezi manual aceste 3 valori.",
     },
     {
         "name": "📈 Alex PIE 20",
+        "mode": "calculated",
         "tickers": ["COST", "V", "ORCL", "JNJ", "HD", "XOM", "CAT", "MSFT", "WMT", "MA", "AMZN", "GOOG", "BRK-B", "NVDA", "TSLA", "JPM", "LLY", "META", "AVGO", "AAPL"],
         "buy_date": date(2026, 5, 19),
         "amount_per_stock": 54.91,
@@ -308,6 +289,33 @@ best_position = None
 worst_position = None
 
 for portfolio in PORTFOLIOS:
+    if portfolio["mode"] == "manual_total":
+        invested_total = portfolio["invested_now"]
+        cash_total = portfolio["cash_now"]
+        portfolio_total_now = portfolio["total_now"]
+        portfolio_total_in = invested_total + cash_total
+        change_pct = ((portfolio_total_now - portfolio_total_in) / portfolio_total_in * 100) if portfolio_total_in else 0
+
+        portfolio_results.append({
+            "name": portfolio["name"],
+            "mode": "manual_total",
+            "tickers": portfolio["tickers"],
+            "invested_total": invested_total,
+            "cash_total": cash_total,
+            "portfolio_total_now": portfolio_total_now,
+            "portfolio_total_in": portfolio_total_in,
+            "change_pct": change_pct,
+            "note": portfolio["note"],
+            "positions": [],
+            "failed": [],
+        })
+
+        portfolio_totals.append({"Categorie": portfolio["name"], "Valoare": portfolio_total_now})
+        global_total_now += portfolio_total_now
+        global_total_in += portfolio_total_in
+        total_cash_global += cash_total
+        continue
+
     positions = []
     failed = []
     total_positions_value = 0.0
@@ -347,6 +355,7 @@ for portfolio in PORTFOLIOS:
 
     portfolio_results.append({
         "name": portfolio["name"],
+        "mode": "calculated",
         "buy_date": portfolio["buy_date"],
         "positions": positions,
         "failed": failed,
@@ -359,13 +368,10 @@ for portfolio in PORTFOLIOS:
         "ticker_count": len(portfolio["tickers"]),
     })
 
-    portfolio_totals.append({"Categorie": portfolio["name"], "Valoare": total_positions_value})
+    portfolio_totals.append({"Categorie": portfolio["name"], "Valoare": portfolio_total_now})
     global_total_now += portfolio_total_now
     global_total_in += portfolio_total_in
     total_cash_global += cash_total
-
-if total_cash_global > 0:
-    portfolio_totals.append({"Categorie": "💵 Cash", "Valoare": total_cash_global})
 
 global_profit = global_total_now - global_total_in
 global_profit_pct = (global_profit / global_total_in * 100) if global_total_in else 0
@@ -433,7 +439,7 @@ with left:
             <div class="summary-card">
                 <div class="summary-label">Best Performer</div>
                 <div class="summary-value" style="font-size:1.18rem;">{best_text}</div>
-                <div class="summary-label">Cea mai bună poziție</div>
+                <div class="summary-label">Cea mai bună poziție calculată</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -471,6 +477,30 @@ with left:
     for result in portfolio_results:
         st.markdown('<div class="glass-card" style="margin-top:16px;">', unsafe_allow_html=True)
         st.markdown(f'<div class="section-title">{result["name"]}</div>', unsafe_allow_html=True)
+
+        if result["mode"] == "manual_total":
+            st.markdown(
+                f"""
+                <div class="section-subtitle">
+                    Valori manuale reale din aplicație.
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.markdown(
+                f"""
+                <div class="notice-box">
+                    <b>Valoare investită:</b> ${result['invested_total']:.2f}<br>
+                    <b>Cash:</b> ${result['cash_total']:.2f}<br>
+                    <b>Valoare totală:</b> ${result['portfolio_total_now']:.2f}<br><br>
+                    {result['note']}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+            continue
+
         st.markdown(
             f'<div class="section-subtitle">Data intrării: {result["buy_date"]:%d.%m.%Y}</div>',
             unsafe_allow_html=True,
@@ -591,4 +621,4 @@ with right:
             unsafe_allow_html=True,
         )
 
-st.caption("Date de la Yahoo Finance • Cash-ul suplimentar este tratat separat, fără profit")
+st.caption("Date de la Yahoo Finance • PIE OT folosește momentan valorile reale manuale • Cash-ul suplimentar este tratat separat")
