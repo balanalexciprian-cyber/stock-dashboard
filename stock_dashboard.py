@@ -285,7 +285,7 @@ PORTFOLIOS = [
         "name": "🤖 AI TECH",
         "mode": "calculated",
         "tickers": ["AMAT", "MU", "MSTR", "AMD", "MRVL", "ASML", "TSM", "SNPS", "SNDK", "NTNX", "INTC", "AVGO", "CDNS", "ON"],
-        "buy_date": date(2026, 5, 27),
+        "buy_date": date(2026, 5, 26),  # de alaltăieri = 26.05.2026
         "amount_per_stock": 78.44,
         "cash_additions": [],
     },
@@ -293,10 +293,11 @@ PORTFOLIOS = [
         "name": "💰 PIE OT Investimental",
         "mode": "manual_total",
         "tickers": ["LIN", "XOM", "PLD", "NEE", "MSFT", "AMZN", "WMT", "META", "JPM", "LLY"],
-        "invested_now": 480.84,
-        "cash_now": 141.98,
+        "invested_cost_basis": 373.30,  # capitalul efectiv băgat în acțiuni
+        "invested_now": 480.84,         # cât valorează acum partea investită
+        "cash_now": 141.98,             # cash separat
         "total_now": 622.82,
-        "note": "PIE OT folosește valorile reale din aplicație. Când cash-ul va fi investit, actualizezi manual aceste valori.",
+        "note": "PIE OT folosește valori manuale reale. Randamentul este calculat doar pe partea investită, iar cash-ul rămâne separat.",
     },
     {
         "name": "📈 Alex PIE 20",
@@ -335,7 +336,7 @@ def get_ticker_data(ticker: str, buy_date: date):
         current_price = float(history["Close"].iloc[-1])
         buy_price = get_price_on_or_before(history, buy_date)
         if buy_price is None:
-            return None, "Fără preț la data cumpărării"
+            return None, f"Fără preț la data {buy_date:%d.%m.%Y}"
         return {"price": current_price, "buy_price": buy_price}, None
     except Exception as e:
         return None, str(e)
@@ -351,21 +352,27 @@ worst_position = None
 
 for portfolio in PORTFOLIOS:
     if portfolio["mode"] == "manual_total":
-        invested_total = portfolio["invested_now"]
+        invested_cost_basis = portfolio["invested_cost_basis"]
+        invested_now = portfolio["invested_now"]
         cash_total = portfolio["cash_now"]
         portfolio_total_now = portfolio["total_now"]
-        portfolio_total_in = invested_total + cash_total
-        change_pct = ((portfolio_total_now - portfolio_total_in) / portfolio_total_in * 100) if portfolio_total_in else 0
+        portfolio_total_in = invested_cost_basis + cash_total
+
+        invested_profit = invested_now - invested_cost_basis
+        invested_change_pct = (invested_profit / invested_cost_basis * 100) if invested_cost_basis else 0
+        total_change_pct = ((portfolio_total_now - portfolio_total_in) / portfolio_total_in * 100) if portfolio_total_in else 0
 
         portfolio_results.append({
             "name": portfolio["name"],
             "mode": "manual_total",
             "tickers": portfolio["tickers"],
-            "invested_total": invested_total,
+            "invested_cost_basis": invested_cost_basis,
+            "invested_now": invested_now,
             "cash_total": cash_total,
             "portfolio_total_now": portfolio_total_now,
             "portfolio_total_in": portfolio_total_in,
-            "change_pct": change_pct,
+            "invested_change_pct": invested_change_pct,
+            "total_change_pct": total_change_pct,
             "note": portfolio["note"],
             "positions": [],
             "failed": [],
@@ -512,9 +519,18 @@ with left:
     st.markdown('<div class="section-subtitle">PIE-urile tale tratate ca asset groups</div>', unsafe_allow_html=True)
 
     for result in portfolio_results:
-        pill_class = "pill-pos" if result["change_pct"] >= 0 else "pill-neg"
-        sign = "+" if result["change_pct"] >= 0 else ""
-        cash_line = f" | Cash: ${result['cash_total']:,.2f}" if result["cash_total"] else ""
+        if result["mode"] == "manual_total":
+            row_pct = result["invested_change_pct"]
+            row_label = f"Invested {row_pct:+.2f}%"
+            cash_line = f" | Cash: ${result['cash_total']:,.2f}"
+            invested_line = f"Invested now: ${result['invested_now']:,.2f}"
+        else:
+            row_pct = result["change_pct"]
+            row_label = f"{row_pct:+.2f}%"
+            cash_line = f" | Cash: ${result['cash_total']:,.2f}" if result["cash_total"] else ""
+            invested_line = f"Investit: ${result['invested_total']:,.2f}"
+
+        pill_class = "pill-pos" if row_pct >= 0 else "pill-neg"
 
         st.markdown(
             f"""
@@ -522,11 +538,11 @@ with left:
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <div class="asset-name">{result['name']}</div>
-                        <div class="asset-sub">Investit: ${result['invested_total']:,.2f}{cash_line}</div>
+                        <div class="asset-sub">{invested_line}{cash_line}</div>
                     </div>
                     <div style="text-align:right;">
                         <div class="asset-name">${result['portfolio_total_now']:,.2f}</div>
-                        <div class="{pill_class}">{sign}{result['change_pct']:.2f}%</div>
+                        <div class="{pill_class}">{row_label}</div>
                     </div>
                 </div>
             </div>
@@ -537,7 +553,11 @@ with left:
     st.markdown("</div>", unsafe_allow_html=True)
 
     for result in portfolio_results:
-        expander_suffix = "Manual" if result["mode"] == "manual_total" else f"{result['change_pct']:+.2f}%"
+        if result["mode"] == "manual_total":
+            expander_suffix = f"Invested {result['invested_change_pct']:+.2f}%"
+        else:
+            expander_suffix = f"{result['change_pct']:+.2f}%"
+
         with st.expander(
             f"{result['name']} • ${result['portfolio_total_now']:,.2f} • {expander_suffix}",
             expanded=False
@@ -546,7 +566,9 @@ with left:
                 st.markdown(
                     f"""
                     <div class="notice-box">
-                        <b>Valoare investită:</b> ${result['invested_total']:.2f}<br>
+                        <b>Capital investit inițial:</b> ${result['invested_cost_basis']:.2f}<br>
+                        <b>Valoare investită acum:</b> ${result['invested_now']:.2f}<br>
+                        <b>Randament pe investiție:</b> {result['invested_change_pct']:+.2f}%<br>
                         <b>Cash:</b> ${result['cash_total']:.2f}<br>
                         <b>Valoare totală:</b> ${result['portfolio_total_now']:.2f}<br><br>
                         {result['note']}
@@ -683,4 +705,4 @@ with right:
             unsafe_allow_html=True,
         )
 
-st.caption("Date de la Yahoo Finance • Tema implicită este Light • PIE OT folosește momentan valorile reale manuale")
+st.caption("Date de la Yahoo Finance • Tema implicită este Light • AI TECH este calculat de la 26.05.2026 • PIE OT separă investiția de cash")
